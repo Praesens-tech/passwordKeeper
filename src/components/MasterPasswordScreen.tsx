@@ -170,6 +170,8 @@ export function MasterPasswordScreen() {
     try {
       const encrypted = await readVaultFile(path);
       await unlockVault(encrypted, masterPwd);
+      // Persistir o path para que o próximo quick unlock saiba qual arquivo abrir
+      useVaultStore.getState().saveToLocalFile(path).catch(() => {});
       if (pendingShare) mergeSharedEntries(pendingShare.entries, pendingShare.group);
     } catch {
       setError("Senha incorreta ou arquivo inválido");
@@ -202,9 +204,10 @@ export function MasterPasswordScreen() {
       await unlockVault(encrypted, masterPwd);
       const revision = await getFileVersion(token, selectedDriveFileId);
       setDriveRevision(revision);
+      // Inicializar polling de mudanças após abrir cofre do Drive
+      await initDriveChangesToken();
       if (pendingShare) mergeSharedEntries(pendingShare.entries, pendingShare.group);
     } catch (err) {
-      const msg = String(err);
       setError(friendlyError(err));
       setLoading(false);
     }
@@ -219,6 +222,8 @@ export function MasterPasswordScreen() {
       try {
         const encrypted = await readVaultFile(localVaultPath);
         await unlockVault(encrypted, masterPwd);
+        // Garantir que o path continua persistido (não-destrutivo, sem re-salvar dados)
+        useVaultStore.getState().saveToLocalFile(localVaultPath).catch(() => {});
       } catch {
         setError("Senha incorreta ou arquivo inválido");
         setLoading(false);
@@ -234,10 +239,11 @@ export function MasterPasswordScreen() {
         await unlockVault(encrypted, masterPwd);
         const revision = await getFileVersion(token, fileId);
         setDriveRevision(revision);
+        // Inicializar polling de mudanças após abrir cofre do Drive
+        await initDriveChangesToken();
       } catch (err) {
         const msg = String(err);
         if (msg.includes("expirada") || msg.includes("autenticado")) {
-          // Sessão expirada → novo login
           setLoading(false); handleConnectDrive();
         } else {
           setError(friendlyError(err));
@@ -404,8 +410,8 @@ export function MasterPasswordScreen() {
                 onClick={() => { reset(); handleConnectDrive(); }} />
               <OptionButton icon={<Share2 size={20} className="text-vault-primary" />} iconBg="bg-vault-primary/20"
                 title="Abrir compartilhamento"
-                subtitle="Abrir o arquivo principal compartilhado no Drive"
-                onClick={() => { reset(); handleConnectDrive(); }} />
+                subtitle="Abrir arquivo colaborativo compartilhado no Drive"
+                onClick={() => { reset(); handleConnectForImport(); }} />
             </div>
           )}
 
