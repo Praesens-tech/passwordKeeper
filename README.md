@@ -173,14 +173,4 @@ npm run build
 npm run tauri dev
 npm run tauri build
 ```
-
-## Changelog
-
-### v0.2.3
-- Realtime collaborative sharing via Drive Changes API
-- Separate `pk-collab-*.keep` files per share (main vault never exposed)
-- Envelope v2 multi-slot encryption for collaborators
-- Single 5s polling loop replaces separate 10s/3s intervals
-- Security pipeline: npm audit + Gitleaks + Aikido PR Gating
-- Bug fixes: `lockVault`/`closeVault` clear `driveChangesToken`; import flow restored
-- 30 automated tests passing
+# License by MIT
