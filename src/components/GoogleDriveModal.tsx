@@ -12,6 +12,7 @@ export function GoogleDriveModal({ onClose }: GoogleDriveModalProps) {
     googleToken, userInfo, driveFileId, isSyncing, lastSyncAt, syncError,
     setGoogleToken, setUserInfo, setDriveFileId,
     syncToCloud, loadFromCloud, unlockVault, masterPassword, ensureValidToken,
+    initDriveChangesToken,
   } = useVaultStore();
 
   const [step, setStep] = useState<"main" | "loading">("main");
@@ -68,6 +69,8 @@ export function GoogleDriveModal({ onClose }: GoogleDriveModalProps) {
         const fileId = await findVaultFile(token);
         if (fileId) setDriveFileId(fileId);
       }
+      // Inicializar polling de mudanças após conectar
+      await initDriveChangesToken();
       setStep("main");
     } catch (err) {
       setError(String(err));
@@ -92,6 +95,8 @@ export function GoogleDriveModal({ onClose }: GoogleDriveModalProps) {
     try {
       const encrypted = await loadFromCloud();
       await unlockVault(encrypted, masterPassword);
+      // Inicializar polling após carregar cofre do Drive
+      await initDriveChangesToken();
     } catch (err) {
       setError(String(err));
     }

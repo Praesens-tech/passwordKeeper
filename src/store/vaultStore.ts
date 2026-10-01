@@ -141,6 +141,7 @@ interface VaultStore {
 
   // ── Local file ─────────────────────────────────────────────────────────────
   saveToLocalFile: (path?: string) => Promise<void>;
+  persistLocalVaultPath: (path: string) => void;
   loadFromLocalFile: (path?: string) => Promise<string>;
 
   // ── Sync (Changes API) ─────────────────────────────────────────────────────
@@ -888,6 +889,12 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
       set({ syncError: String(err), isSyncing: false });
       throw err;
     }
+  },
+
+  // Persiste apenas o path sem reescrever o arquivo (usado após abrir um cofre existente)
+  persistLocalVaultPath: (path: string) => {
+    savePersisted("pk_local_vault_path", path);
+    set({ localVaultPath: path });
   },
 
   loadFromLocalFile: async (path) => {

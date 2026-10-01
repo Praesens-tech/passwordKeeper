@@ -73,60 +73,6 @@ export async function startOAuthFlow(forceConsent = false): Promise<GoogleToken>
   return startOAuthDesktop(forceConsent);
 }
 
-function parseOAuthRedirect(url: string, expectedState: string): string {
-  const parsed = new URL(url);
-  const params = parsed.searchParams;
-  const error = params.get("error");
-  if (error) throw new Error(params.get("error_description") ?? error);
-  if (params.get("state") !== expectedState) {
-    throw new Error("Estado OAuth invalido. Tente conectar novamente.");
-  }
-  const code = params.get("code");
-  if (!code) throw new Error("Codigo OAuth nao recebido.");
-  return code;
-}
-
-async function exchangeCodeForToken(options: {
-  code: string;
-  codeVerifier: string;
-  clientId: string;
-  redirectUri: string;
-  clientSecret?: string;
-}): Promise<GoogleToken> {
-  const body: Record<string, string> = {
-    client_id: options.clientId,
-    redirect_uri: options.redirectUri,
-    grant_type: "authorization_code",
-    code: options.code,
-    code_verifier: options.codeVerifier,
-  };
-  if (options.clientSecret) body.client_secret = options.clientSecret;
-
-  const res = await rustFetch(
-    "POST",
-    "https://oauth2.googleapis.com/token",
-    { "Content-Type": "application/x-www-form-urlencoded" },
-    new URLSearchParams(body).toString(),
-  );
-
-  if (!res.ok) {
-    throw new Error(`Falha no token exchange (${res.status}): ${res.text()}`);
-  }
-  const data = res.json() as {
-    access_token: string;
-    refresh_token?: string;
-    expires_in: number;
-    token_type: string;
-  };
-  return {
-    access_token: data.access_token,
-    refresh_token: data.refresh_token,
-    expires_at: Date.now() + data.expires_in * 1000,
-    token_type: data.token_type,
-    client_id: options.clientId,
-  };
-}
-
 async function startOAuthAndroid(forceConsent: boolean): Promise<GoogleToken> {
   if (!GOOGLE_ANDROID_CLIENT_ID) {
     throw new Error("Configure VITE_GOOGLE_ANDROID_CLIENT_ID no arquivo .env para usar o Google Drive no Android.");

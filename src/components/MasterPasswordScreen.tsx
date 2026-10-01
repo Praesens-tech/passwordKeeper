@@ -62,7 +62,7 @@ export function MasterPasswordScreen() {
     googleToken, userInfo,
     setGoogleToken, setUserInfo, setDriveFileId, setDriveRevision,
     localVaultPath, ensureValidToken, dismissedShareFileIds, dismissShareFile,
-    addSharedSource, initDriveChangesToken,
+    addSharedSource, initDriveChangesToken, persistLocalVaultPath,
   } = useVaultStore();
 
   const [mode, setMode] = useState<ScreenMode>(
@@ -170,8 +170,8 @@ export function MasterPasswordScreen() {
     try {
       const encrypted = await readVaultFile(path);
       await unlockVault(encrypted, masterPwd);
-      // Persistir o path para que o próximo quick unlock saiba qual arquivo abrir
-      useVaultStore.getState().saveToLocalFile(path).catch(() => {});
+      // Persistir apenas o path — não reescrever o arquivo (vault acabou de ser aberto, isDirty=false)
+      persistLocalVaultPath(path);
       if (pendingShare) mergeSharedEntries(pendingShare.entries, pendingShare.group);
     } catch {
       setError("Senha incorreta ou arquivo inválido");
@@ -222,8 +222,8 @@ export function MasterPasswordScreen() {
       try {
         const encrypted = await readVaultFile(localVaultPath);
         await unlockVault(encrypted, masterPwd);
-        // Garantir que o path continua persistido (não-destrutivo, sem re-salvar dados)
-        useVaultStore.getState().saveToLocalFile(localVaultPath).catch(() => {});
+        // Manter o path persistido sem reescrever o arquivo
+        persistLocalVaultPath(localVaultPath);
       } catch {
         setError("Senha incorreta ou arquivo inválido");
         setLoading(false);
