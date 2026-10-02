@@ -112,6 +112,8 @@ jobs:
           VITE_GOOGLE_CLIENT_ID:          ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
           VITE_GOOGLE_CLIENT_SECRET:      ${{ secrets.VITE_GOOGLE_CLIENT_SECRET }}
           VITE_GOOGLE_ANDROID_CLIENT_ID:  ${{ secrets.VITE_GOOGLE_ANDROID_CLIENT_ID }}
+          TAURI_SIGNING_PRIVATE_KEY:      ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: ${{ github.ref_name }}
           releaseName: 'Password Keeper ${{ github.ref_name }}'
@@ -329,9 +331,101 @@ jobs:
             });
             console.log(`✓ Release ${tag} publicada!`);
 
+  # ── Manifesto do auto update ───────────────────────────────────────────────
+  publish-updater-manifest:
+    needs: publish-release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Gerar e anexar latest.json
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const tag = context.ref.replace('refs/tags/', '');
+            const version = tag.replace(/^v/, '');
+
+            const { data: releases } = await github.rest.repos.listReleases({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+            const release = releases.find((item) => item.tag_name === tag);
+            if (!release) {
+              core.setFailed(`Release com tag ${tag} não encontrada`);
+              return;
+            }
+
+            const assets = release.assets;
+            const byName = new Map(assets.map((asset) => [asset.name, asset]));
+
+            async function signatureFor(asset) {
+              const sig = byName.get(`${asset.name}.sig`);
+              if (!sig) throw new Error(`Assinatura não encontrada para ${asset.name}`);
+              const response = await github.request('GET /repos/{owner}/{repo}/releases/assets/{asset_id}', {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                asset_id: sig.id,
+                headers: { accept: 'application/octet-stream' },
+              });
+              return Buffer.from(response.data).toString('utf8').trim();
+            }
+
+            function findAsset(description, predicate) {
+              const asset = assets.find(predicate);
+              if (!asset) throw new Error(`Asset não encontrado: ${description}`);
+              return asset;
+            }
+
+            async function platformEntry(asset) {
+              return {
+                url: asset.browser_download_url,
+                signature: await signatureFor(asset),
+              };
+            }
+
+            const linux = findAsset('Linux updater bundle', (asset) => asset.name.endsWith('.AppImage.tar.gz'));
+            const windows = findAsset('Windows setup EXE', (asset) => asset.name.endsWith('-setup.exe'));
+            const macArm = findAsset('macOS Apple Silicon updater bundle', (asset) =>
+              asset.name.includes('aarch64') && asset.name.endsWith('.app.tar.gz')
+            );
+            const macIntel = findAsset('macOS Intel updater bundle', (asset) =>
+              (asset.name.includes('x64') || asset.name.includes('x86_64')) && asset.name.endsWith('.app.tar.gz')
+            );
+
+            const manifest = {
+              version,
+              notes: release.body || '',
+              pub_date: release.published_at || new Date().toISOString(),
+              platforms: {
+                'linux-x86_64': await platformEntry(linux),
+                'windows-x86_64': await platformEntry(windows),
+                'darwin-aarch64': await platformEntry(macArm),
+                'darwin-x86_64': await platformEntry(macIntel),
+              },
+            };
+
+            const existing = assets.find((asset) => asset.name === 'latest.json');
+            if (existing) {
+              await github.rest.repos.deleteReleaseAsset({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                asset_id: existing.id,
+              });
+            }
+
+            await github.rest.repos.uploadReleaseAsset({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: release.id,
+              name: 'latest.json',
+              data: Buffer.from(JSON.stringify(manifest, null, 2)),
+              headers: { 'content-type': 'application/json' },
+            });
+
+            console.log(`✓ latest.json publicado para ${tag}`);
+
   # ── Atualizar pagina do produto ────────────────────────────────────────────
   update-product-page:
-    needs: publish-release
+    needs: publish-updater-manifest
     runs-on: ubuntu-latest
 
     steps:

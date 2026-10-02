@@ -661,6 +661,11 @@ pub fn run() {
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_deep_link::init());
 
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    let builder = builder
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_process::init());
+
     let builder = builder.invoke_handler(tauri::generate_handler![
         start_oauth,
         start_oauth_android_native,

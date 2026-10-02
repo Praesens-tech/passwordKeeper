@@ -31,6 +31,7 @@
   },
   "bundle": {
     "active": true,
+    "createUpdaterArtifacts": true,
     "targets": "all",
     "icon": [
       "icons/32x32.png",
@@ -41,6 +42,15 @@
     ]
   },
   "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEY4M0IwREQwQ0M5QjhCRjQKUldUMGk1dk0wQTA3K0ZuSnBNVEJldk9xUzNuZTZoYnVtTzl0ZlE2dTVudDZNNnR0cXhnTGlRbEgK",
+      "endpoints": [
+        "https://github.com/mpblima/passwordKeeper/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
+    },
     "deep-link": {
       "mobile": [
         {

@@ -619,12 +619,31 @@ Gera:
 - Windows `.exe`, `.msi`
 - macOS `.dmg` Intel e Apple Silicon
 - Android `.apk`
+- Artefatos assinados do updater Tauri para desktop
+- `latest.json` anexado a release para servir como manifesto de atualizacao
 
 ### Versionamento na Release
 
 O script [scripts/sync-version.js](scripts/sync-version.js) sincroniza `package.json`, `package-lock.json`, `src-tauri/tauri.conf.json` e `src-tauri/Cargo.toml` com a tag durante o workflow.
 
 O script [scripts/update-product-page-version.js](scripts/update-product-page-version.js) sincroniza a pagina publica em `docs` com a tag publicada. Apos a release ser publicada, o workflow atualiza `docs/index.html` e `docs/download.html`, commita em `master` e deixa o GitHub Pages republicar a pagina com os links e o historico da versao corrente.
+
+### Auto Update
+
+Desktop usa `@tauri-apps/plugin-updater` apontando para:
+
+```text
+https://github.com/mpblima/passwordKeeper/releases/latest/download/latest.json
+```
+
+Fluxo no app:
+
+1. Em builds instalados, o app verifica atualizacao na inicializacao.
+2. Se houver nova versao, pergunta ao usuario se deseja atualizar.
+3. Se o usuario aceitar, baixa, valida a assinatura, instala e reinicia quando necessario.
+4. Se o usuario recusar, a versao e ignorada no check automatico e o usuario pode tentar depois em **Ajuda > Atualizar**.
+
+Android usa deteccao da release mais recente e abre o APK para atualizacao manual. Esse comportamento deve ser substituido pela loja correspondente quando a distribuicao mobile sair por loja.
 
 ## Secrets do GitHub Actions
 
@@ -635,6 +654,8 @@ Obrigatorios para recursos Google:
 | `VITE_GOOGLE_CLIENT_ID` | OAuth Client ID desktop |
 | `VITE_GOOGLE_CLIENT_SECRET` | OAuth Client Secret desktop |
 | `VITE_GOOGLE_ANDROID_CLIENT_ID` | OAuth Client ID Android |
+| `TAURI_SIGNING_PRIVATE_KEY` | Chave privada do updater Tauri usada para assinar artefatos |
+| `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | Senha da chave do updater, se houver |
 
 Recomendados para Android:
 
@@ -661,6 +682,7 @@ Nunca commitar:
 - `client_secret*.json`
 - `*.jks`
 - `*.keystore`
+- chaves privadas do updater Tauri
 - tokens OAuth
 - arquivos `.keep` reais de usuarios
 

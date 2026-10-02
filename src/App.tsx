@@ -7,6 +7,7 @@ import { PasswordForm } from "./components/PasswordForm";
 import { AppMenuBar } from "./components/AppMenuBar";
 import { Cloud, RefreshCw, AlertCircle, X } from "lucide-react";
 import { usePlatform } from "./hooks/usePlatform";
+import { checkForAppUpdate } from "./services/autoUpdate";
 
 // Intervalo de polling da Drive Changes API (ms).
 // A Changes API é eficiente — retorna rapidamente sem mudanças (sem custo de download).
@@ -26,12 +27,24 @@ export function App() {
   const [addEntryGroupId, setAddEntryGroupId] = useState<string | undefined>();
   const autoSyncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inactivityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const updateCheckedRef = useRef(false);
   const [sharedNotice, setSharedNotice] = useState("");
   const [isForceSyncing, setIsForceSyncing] = useState(false);
 
   // ── Inicialização ──────────────────────────────────────────────────────────
   useEffect(() => {
     initFromStorage().catch(() => {});
+  }, []);
+
+  // Verifica novas versões em builds instalados. No dev server, evita prompts
+  // vindos da última release publicada enquanto estamos desenvolvendo.
+  useEffect(() => {
+    if (import.meta.env.DEV || updateCheckedRef.current) return;
+    updateCheckedRef.current = true;
+    const timer = setTimeout(() => {
+      checkForAppUpdate("startup").catch(() => {});
+    }, 1500);
+    return () => clearTimeout(timer);
   }, []);
 
   // Obtém o changesToken do Drive assim que o cofre é desbloqueado com Drive conectado.

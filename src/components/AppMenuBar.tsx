@@ -8,6 +8,7 @@ import { GoogleDriveModal } from "./GoogleDriveModal";
 import { SharedUsersModal } from "./SharedUsersModal";
 import { BackupModal } from "./BackupModal";
 import { ChangePasswordModal } from "./ChangePasswordModal";
+import { checkForAppUpdate } from "../services/autoUpdate";
 
 interface AppMenuBarProps {
   onForceSync?: () => void;
@@ -23,6 +24,7 @@ export function AppMenuBar({ onForceSync, isForceSyncing }: AppMenuBarProps) {
   const [showShared, setShowShared] = useState(false);
   const [showBackup, setShowBackup] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
   const barRef = useRef<HTMLDivElement>(null);
 
   // Close menu when clicking outside
@@ -43,6 +45,16 @@ export function AppMenuBar({ onForceSync, isForceSyncing }: AppMenuBarProps) {
   function close() { setOpenMenu(null); }
 
   const isOwner = currentUserRole() === "owner";
+
+  async function handleCheckUpdate() {
+    close();
+    setIsCheckingUpdate(true);
+    try {
+      await checkForAppUpdate("manual");
+    } finally {
+      setIsCheckingUpdate(false);
+    }
+  }
 
   return (
     <>
@@ -114,6 +126,12 @@ export function AppMenuBar({ onForceSync, isForceSyncing }: AppMenuBarProps) {
         {/* Ajuda dropdown */}
         {openMenu === "help" && (
           <Dropdown anchor="left-[142px] top-9">
+            <MenuItem
+              icon={<RefreshCw size={14} className={isCheckingUpdate ? "animate-spin" : ""} />}
+              label={isCheckingUpdate ? "Verificando..." : "Atualizar"}
+              onClick={handleCheckUpdate}
+            />
+            <Separator />
             <MenuItem icon={<Info size={14} />} label="Sobre o Password Keeper" onClick={() => { close(); setShowAbout(true); }} />
           </Dropdown>
         )}
