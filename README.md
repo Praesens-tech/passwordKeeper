@@ -620,7 +620,7 @@ Gera:
 - macOS `.dmg` Intel e Apple Silicon
 - Android `.apk`
 - Artefatos assinados do updater Tauri para desktop
-- `latest.json` anexado a release para servir como manifesto de atualizacao
+- `latest.json` gerado pelo `tauri-action` e anexado a release para servir como manifesto de atualizacao
 
 ### Versionamento na Release
 
