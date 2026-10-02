@@ -187,11 +187,8 @@ jobs:
       - name: Preparar keystore para assinatura
         shell: bash
         run: |
-          if [ -n "$ANDROID_KEYSTORE_B64" ]; then
-            echo "$ANDROID_KEYSTORE_B64" | base64 -d > "$GITHUB_WORKSPACE/release.jks"
-            echo "KEYSTORE_GENERATED=false" >> $GITHUB_ENV
-          else
-            echo "ℹ️ Secret ANDROID_KEYSTORE_B64 não configurado — gerando keystore temporária."
+          generate_temp_keystore() {
+            echo "ℹ️ Gerando keystore temporária para assinatura Android."
             keytool -genkey -v \
               -keystore "$GITHUB_WORKSPACE/release.jks" \
               -alias passwordkeeper \
@@ -199,6 +196,19 @@ jobs:
               -storepass android -keypass android \
               -dname "CN=Password Keeper,O=Unknown,C=BR"
             echo "KEYSTORE_GENERATED=true" >> $GITHUB_ENV
+          }
+
+          if [ -n "$ANDROID_KEYSTORE_B64" ]; then
+            if printf '%s' "$ANDROID_KEYSTORE_B64" | base64 -d > "$GITHUB_WORKSPACE/release.jks" && [ -s "$GITHUB_WORKSPACE/release.jks" ]; then
+              echo "KEYSTORE_GENERATED=false" >> $GITHUB_ENV
+            else
+              echo "⚠️ Secret ANDROID_KEYSTORE_B64 inválido — usando keystore temporária."
+              rm -f "$GITHUB_WORKSPACE/release.jks"
+              generate_temp_keystore
+            fi
+          else
+            echo "ℹ️ Secret ANDROID_KEYSTORE_B64 não configurado."
+            generate_temp_keystore
           fi
         env:
           ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
