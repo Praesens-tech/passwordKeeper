@@ -394,6 +394,40 @@
         white-space: nowrap;
       }
 
+      .version-history {
+        margin-top: 18px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: color-mix(in srgb, var(--surface) 88%, transparent);
+        padding: 24px;
+      }
+
+      .version-history h3 {
+        margin: 0;
+        font-size: 1.25rem;
+        letter-spacing: -0.025em;
+      }
+
+      .version-list {
+        margin: 18px 0 0;
+        padding: 0;
+        list-style: none;
+        display: grid;
+        gap: 14px;
+      }
+
+      .version-list li {
+        display: grid;
+        grid-template-columns: 92px 1fr;
+        gap: 16px;
+        align-items: start;
+        color: var(--muted);
+      }
+
+      .version-list strong {
+        color: var(--text);
+      }
+
       .cta {
         border: 1px solid var(--line);
         border-radius: 32px;
@@ -510,6 +544,11 @@
         .architecture,
         .download-grid {
           grid-template-columns: 1fr;
+        }
+
+        .version-list li {
+          grid-template-columns: 1fr;
+          gap: 6px;
         }
 
         .security-band,
@@ -732,6 +771,19 @@
               </div>
             </article>
           </div>
+          <aside class="version-history" aria-labelledby="version-history-title">
+            <h3 id="version-history-title" data-i18n="historyTitle">Historico de versoes</h3>
+            <ul class="version-list">
+              <li>
+                <strong data-current-version>v0.2.5</strong>
+                <span data-i18n="historyCurrent">Downloads para Windows, macOS, Linux e Android, com pagina simples para usuarios finais.</span>
+              </li>
+              <li>
+                <strong>v0.2.4</strong>
+                <span data-i18n="historyPrevious">Melhorias de empacotamento e preparacao para distribuicao multiplataforma.</span>
+              </li>
+            </ul>
+          </aside>
         </div>
       </section>
 
@@ -816,6 +868,9 @@
           chooseText: "Windows: use EXE. macOS: escolha Apple Silicon para Macs novos ou Intel para Macs antigos. Linux: comece pelo AppImage.",
           installTitle: "Primeiro uso",
           installText: "Instale, crie uma senha mestra e comece adicionando suas contas mais importantes. A sincronizacao pelo Drive pode ser ativada depois.",
+          historyTitle: "Historico de versoes",
+          historyCurrent: "Downloads para Windows, macOS, Linux e Android, com pagina simples para usuarios finais.",
+          historyPrevious: "Melhorias de empacotamento e preparacao para distribuicao multiplataforma.",
           ctaTitle: "Leve seu cofre para onde trabalha.",
           ctaText: "Comece local, conecte o Drive quando precisar e compartilhe apenas o que faz sentido.",
           ctaButton: "Escolher download",
@@ -880,6 +935,9 @@
           chooseText: "Windows: use EXE. macOS: choose Apple Silicon for newer Macs or Intel for older Macs. Linux: start with AppImage.",
           installTitle: "First use",
           installText: "Install it, create a master password, and start by adding your most important accounts. Drive sync can be enabled later.",
+          historyTitle: "Version history",
+          historyCurrent: "Downloads for Windows, macOS, Linux, and Android, with a simpler page for everyday users.",
+          historyPrevious: "Packaging improvements and preparation for cross-platform distribution.",
           ctaTitle: "Take your vault where you work.",
           ctaText: "Start local, connect Drive when needed, and share only what makes sense.",
           ctaButton: "Choose download",

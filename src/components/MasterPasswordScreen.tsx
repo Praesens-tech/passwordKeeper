@@ -10,7 +10,7 @@ import {
   startOAuthFlow, getUserInfo, getFileVersion,
 } from "../services/googleDrive";
 import { decryptVaultEnvelope } from "../services/crypto";
-import { getMobileVaultPath, pickOpenPath, readVaultFile } from "../services/localFile";
+import { getMobileVaultPath, pickOpenPath, pickSavePath, readVaultFile } from "../services/localFile";
 import { PasswordEntry, PasswordGroup, VaultPermission } from "../types/vault";
 
 type ScreenMode =
@@ -58,7 +58,7 @@ function detectInitialMode(
 export function MasterPasswordScreen() {
   const { isAndroid } = usePlatform();
   const {
-    createVault, unlockVault, mergeSharedEntries,
+    createVault, unlockVault, mergeSharedEntries, saveToLocalFile,
     googleToken, userInfo,
     setGoogleToken, setUserInfo, setDriveFileId, setDriveRevision,
     localVaultPath, ensureValidToken, dismissedShareFileIds, dismissShareFile,
@@ -142,7 +142,19 @@ export function MasterPasswordScreen() {
     setError("");
     if (masterPwd.length < 8) { setError("A senha mestra deve ter pelo menos 8 caracteres"); return; }
     if (masterPwd !== confirmPwd) { setError("As senhas não conferem"); return; }
-    createVault(masterPwd);
+    setLoading(true);
+    try {
+      const savePath = isAndroid ? null : await pickSavePath("meu-cofre.keep");
+      if (!isAndroid && !savePath) {
+        setLoading(false);
+        return;
+      }
+      createVault(masterPwd);
+      if (savePath) await saveToLocalFile(savePath);
+    } catch {
+      setError("Não foi possível criar o cofre neste local");
+      setLoading(false);
+    }
   }
 
   async function handlePickLocalFile() {
@@ -425,12 +437,18 @@ export function MasterPasswordScreen() {
                 <p className="text-xs text-vault-textMuted leading-relaxed">
                   A senha mestra criptografa o arquivo <code className="text-vault-primary">.keep</code>. Ela não fica salva em nenhum servidor — só você a conhece.
                 </p>
+                {!isAndroid && (
+                  <p className="text-xs text-vault-textMuted leading-relaxed">
+                    Ao criar, você escolherá onde salvar o arquivo do cofre no computador.
+                  </p>
+                )}
               </div>
               <PasswordField label="Senha mestra" value={masterPwd} onChange={setMasterPwd} show={showPwd} onToggle={() => setShowPwd(!showPwd)} placeholder="Mínimo 8 caracteres" />
               <PasswordField label="Confirmar senha" value={confirmPwd} onChange={setConfirmPwd} show={showPwd} onToggle={() => setShowPwd(!showPwd)} placeholder="Digite novamente" />
               {error && <ErrorMsg message={error} />}
-              <button type="submit" className="w-full py-3 bg-vault-primary hover:bg-vault-primaryHover rounded-xl text-vault-bg font-semibold transition-all">
-                Criar Cofre
+              <button type="submit" disabled={loading} className="w-full py-3 bg-vault-primary hover:bg-vault-primaryHover disabled:opacity-60 rounded-xl text-vault-bg font-semibold transition-all flex items-center justify-center gap-2">
+                {loading && <Loader2 size={18} className="animate-spin" />}
+                {loading ? "Criando..." : "Criar Cofre"}
               </button>
             </form>
           )}

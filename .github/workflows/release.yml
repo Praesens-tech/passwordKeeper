@@ -328,3 +328,34 @@ jobs:
               draft:      false,
             });
             console.log(`✓ Release ${tag} publicada!`);
+
+  # ── Atualizar pagina do produto ────────────────────────────────────────────
+  update-product-page:
+    needs: publish-release
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: master
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Atualizar links da pagina publicada
+        run: node scripts/update-product-page-version.js ${{ github.ref_name }}
+
+      - name: Commitar atualizacao da pagina
+        shell: bash
+        run: |
+          if git diff --quiet -- docs/index.html docs/download.html; then
+            echo "Pagina do produto ja estava atualizada."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/index.html docs/download.html
+          git commit -m "Update product page for ${{ github.ref_name }}"
+          git push origin master

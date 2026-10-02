@@ -40,6 +40,7 @@ Principais recursos:
 - Gerador de senhas com opcoes de letras, numeros e simbolos.
 - Medidor de forca da senha.
 - Salvar e abrir arquivo local `.keep`.
+- Escolher a localizacao do arquivo `.keep` ao criar um cofre novo no desktop.
 - Sincronizar cofre principal com Google Drive.
 - Detectar mudancas remotas via Google Drive Changes API.
 - Compartilhar cofre, grupo ou entrada como documento colaborativo separado.
@@ -63,6 +64,7 @@ https://mpblima.github.io/passwordKeeper/
 ```
 
 A pagina tem portugues como idioma padrao e alternancia para ingles.
+Ela tambem inclui links de download por plataforma e um historico simples de versoes para usuarios finais.
 
 ## Stack Tecnica
 
@@ -622,6 +624,8 @@ Gera:
 
 O script [scripts/sync-version.js](scripts/sync-version.js) sincroniza `package.json`, `package-lock.json`, `src-tauri/tauri.conf.json` e `src-tauri/Cargo.toml` com a tag durante o workflow.
 
+O script [scripts/update-product-page-version.js](scripts/update-product-page-version.js) sincroniza a pagina publica em `docs` com a tag publicada. Apos a release ser publicada, o workflow atualiza `docs/index.html` e `docs/download.html`, commita em `master` e deixa o GitHub Pages republicar a pagina com os links e o historico da versao corrente.
+
 ## Secrets do GitHub Actions
 
 Obrigatorios para recursos Google:
@@ -688,4 +692,3 @@ Se qualquer segredo for exposto:
 ## Licenca
 
 ISC. Veja [package.json](package.json).
-
