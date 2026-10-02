@@ -394,11 +394,6 @@
         white-space: nowrap;
       }
 
-      .release-link {
-        margin-top: 26px;
-        display: inline-flex;
-      }
-
       .cta {
         border: 1px solid var(--line);
         border-radius: 32px;
@@ -546,7 +541,6 @@
           <a href="#features" data-i18n="navFeatures">Recursos</a>
           <a href="#security" data-i18n="navSecurity">Seguranca</a>
           <a href="#downloads" data-i18n="navDownloads">Downloads</a>
-          <a href="https://github.com/mpblima/passwordKeeper" target="_blank" rel="noreferrer" data-i18n="navGithub">GitHub</a>
         </div>
         <div class="nav-actions">
           <button class="language-toggle" type="button" id="languageToggle" aria-label="Change language">EN</button>
@@ -565,7 +559,7 @@
             </p>
             <div class="hero-actions">
               <a class="button primary" href="#downloads" data-i18n="heroPrimary">Baixar agora</a>
-              <a class="button secondary" href="https://github.com/mpblima/passwordKeeper" target="_blank" rel="noreferrer" data-i18n="heroSecondary">Ver codigo</a>
+              <a class="button secondary" href="#features" data-i18n="heroSecondary">Conhecer recursos</a>
             </div>
             <div class="proof" aria-label="Product highlights">
               <div class="proof-item">
@@ -602,13 +596,13 @@
           <div class="section-title">
             <h2 data-i18n="featuresTitle">Feito para credenciais reais.</h2>
             <p data-i18n="featuresText">
-              Guarde contas, notas, URLs, grupos e favoritos em um app nativo, rapido e desenhado para uso diario.
+              Guarde contas, notas, URLs, grupos e favoritos em um app simples, rapido e feito para o dia a dia.
             </p>
           </div>
           <div class="feature-grid">
             <article class="feature">
               <h3 data-i18n="featureOneTitle">Cofre criptografado</h3>
-              <p data-i18n="featureOneText">Cada arquivo .keep e protegido por AES-256-GCM com chave derivada via PBKDF2.</p>
+              <p data-i18n="featureOneText">Suas senhas ficam trancadas por uma senha mestra que so voce conhece.</p>
             </article>
             <article class="feature">
               <h3 data-i18n="featureTwoTitle">Organizacao clara</h3>
@@ -626,6 +620,10 @@
               <h3 data-i18n="featureFiveTitle">Colaboracao segura</h3>
               <p data-i18n="featureFiveText">Compartilhe um cofre, grupo ou entrada com permissao de leitura ou edicao.</p>
             </article>
+            <article class="feature">
+              <h3 data-i18n="featureSixTitle">Tudo em um so lugar</h3>
+              <p data-i18n="featureSixText">Salve logins, sites, observacoes importantes e dados de acesso sem espalhar informacoes em planilhas ou mensagens.</p>
+            </article>
           </div>
         </div>
       </section>
@@ -635,14 +633,14 @@
           <div class="section-title">
             <h2 data-i18n="securityTitle">A senha mestra fica com voce.</h2>
             <p data-i18n="securityText">
-              Password Keeper nao tem servidor proprio. O arquivo no Drive e opaco sem uma senha autorizada.
+              Password Keeper foi feito para que suas senhas nao fiquem expostas. Mesmo quando voce sincroniza, o arquivo continua protegido.
             </p>
           </div>
           <ul class="security-list">
-            <li><strong data-i18n="securityOneStrong">Envelope multi-senha:</strong> <span data-i18n="securityOneText">cada colaborador desbloqueia a mesma chave interna com sua propria senha.</span></li>
-            <li><strong data-i18n="securityTwoStrong">Auto-lock:</strong> <span data-i18n="securityTwoText">o cofre bloqueia apos inatividade para reduzir exposicao local.</span></li>
-            <li><strong data-i18n="securityThreeStrong">Sem backend extra:</strong> <span data-i18n="securityThreeText">sincronizacao e compartilhamento usam a conta Google do usuario.</span></li>
-            <li><strong data-i18n="securityFourStrong">Codigo aberto:</strong> <span data-i18n="securityFourText">a arquitetura, os fluxos e a criptografia podem ser auditados no repositorio.</span></li>
+            <li><strong data-i18n="securityOneStrong">Senha mestra:</strong> <span data-i18n="securityOneText">e a chave principal do seu cofre. Sem ela, o arquivo nao abre.</span></li>
+            <li><strong data-i18n="securityTwoStrong">Bloqueio automatico:</strong> <span data-i18n="securityTwoText">se voce ficar um tempo sem usar, o cofre fecha sozinho.</span></li>
+            <li><strong data-i18n="securityThreeStrong">Sincronizacao protegida:</strong> <span data-i18n="securityThreeText">o Google Drive guarda apenas o arquivo criptografado, nao suas senhas legiveis.</span></li>
+            <li><strong data-i18n="securityFourStrong">Compartilhamento controlado:</strong> <span data-i18n="securityFourText">voce escolhe o que compartilhar e se a outra pessoa pode apenas ver ou tambem editar.</span></li>
           </ul>
         </div>
       </section>
@@ -650,23 +648,23 @@
       <section id="architecture">
         <div class="shell">
           <div class="section-title">
-            <h2 data-i18n="architectureTitle">Simples de entender.</h2>
+            <h2 data-i18n="architectureTitle">Como funciona na pratica.</h2>
             <p data-i18n="architectureText">
-              A arquitetura foi pensada para reduzir superficie de ataque e manter os dados legiveis apenas no app desbloqueado.
+              Voce nao precisa entender criptografia para usar. O fluxo foi pensado para ser direto desde o primeiro cofre.
             </p>
           </div>
           <div class="architecture">
             <article class="architecture-step">
-              <h3 data-i18n="archOneTitle">Criptografa localmente</h3>
-              <p data-i18n="archOneText">O React envia os dados para o servico de criptografia antes de salvar ou sincronizar.</p>
+              <h3 data-i18n="archOneTitle">1. Crie sua senha mestra</h3>
+              <p data-i18n="archOneText">Ela protege tudo. Escolha uma senha forte, memoravel e diferente das suas outras senhas.</p>
             </article>
             <article class="architecture-step">
-              <h3 data-i18n="archTwoTitle">Salva arquivo .keep</h3>
-              <p data-i18n="archTwoText">O cofre vira um documento criptografado que pode ficar no disco ou no Google Drive.</p>
+              <h3 data-i18n="archTwoTitle">2. Cadastre suas contas</h3>
+              <p data-i18n="archTwoText">Organize por grupos, favorite os acessos importantes e encontre tudo pela busca.</p>
             </article>
             <article class="architecture-step">
-              <h3 data-i18n="archThreeTitle">Sincroniza mudancas</h3>
-              <p data-i18n="archThreeText">A Drive Changes API avisa quando um arquivo muda, evitando downloads desnecessarios.</p>
+              <h3 data-i18n="archThreeTitle">3. Use em outros dispositivos</h3>
+              <p data-i18n="archThreeText">Se quiser, conecte o Google Drive para abrir o mesmo cofre no desktop e no Android.</p>
             </article>
           </div>
         </div>
@@ -677,7 +675,7 @@
           <div class="section-title">
             <h2 data-i18n="downloadsTitle">Baixe para sua plataforma.</h2>
             <p data-i18n="downloadsText">
-              Escolha o pacote da sua plataforma. Os links apontam para os assets oficiais da release no GitHub.
+              Escolha o sistema onde voce quer instalar. Se estiver em duvida no Windows, use o EXE. No Linux, AppImage costuma ser a opcao mais simples.
             </p>
           </div>
           <div class="download-grid">
@@ -687,8 +685,8 @@
                 <p data-i18n="windowsText">Instalador classico para maquinas x64.</p>
               </div>
               <div class="download-links">
-                <a class="download-link" href="https://github.com/mpblima/passwordKeeper/releases/download/v0.2.5/Password.Keeper_0.2.5_x64-setup.exe">EXE</a>
-                <a class="download-link" href="https://github.com/mpblima/passwordKeeper/releases/download/v0.2.5/Password.Keeper_0.2.5_x64_en-US.msi">MSI</a>
+                <a class="download-link" href="./download.html?file=windows-exe">EXE</a>
+                <a class="download-link" href="./download.html?file=windows-msi">MSI</a>
               </div>
             </article>
             <article class="download-card">
@@ -697,8 +695,8 @@
                 <p data-i18n="macText">Pacotes DMG para Apple Silicon e Intel.</p>
               </div>
               <div class="download-links">
-                <a class="download-link" href="https://github.com/mpblima/passwordKeeper/releases/download/v0.2.5/Password.Keeper_0.2.5_aarch64.dmg">Apple Silicon</a>
-                <a class="download-link" href="https://github.com/mpblima/passwordKeeper/releases/download/v0.2.5/Password.Keeper_0.2.5_x64.dmg">Intel</a>
+                <a class="download-link" href="./download.html?file=mac-arm">Apple Silicon</a>
+                <a class="download-link" href="./download.html?file=mac-intel">Intel</a>
               </div>
             </article>
             <article class="download-card">
@@ -707,9 +705,9 @@
                 <p data-i18n="linuxText">Escolha AppImage, Debian/Ubuntu ou RPM.</p>
               </div>
               <div class="download-links">
-                <a class="download-link" href="https://github.com/mpblima/passwordKeeper/releases/download/v0.2.5/Password.Keeper_0.2.5_amd64.AppImage">AppImage</a>
-                <a class="download-link" href="https://github.com/mpblima/passwordKeeper/releases/download/v0.2.5/Password.Keeper_0.2.5_amd64.deb">DEB</a>
-                <a class="download-link" href="https://github.com/mpblima/passwordKeeper/releases/download/v0.2.5/Password.Keeper-0.2.5-1.x86_64.rpm">RPM</a>
+                <a class="download-link" href="./download.html?file=linux-appimage">AppImage</a>
+                <a class="download-link" href="./download.html?file=linux-deb">DEB</a>
+                <a class="download-link" href="./download.html?file=linux-rpm">RPM</a>
               </div>
             </article>
             <article class="download-card">
@@ -718,25 +716,19 @@
                 <p data-i18n="androidText">APK assinado para instalacao manual.</p>
               </div>
               <div class="download-links">
-                <a class="download-link" href="https://github.com/mpblima/passwordKeeper/releases/download/v0.2.5/PasswordKeeper-0.2.5-android.apk">APK</a>
+                <a class="download-link" href="./download.html?file=android-apk">APK</a>
               </div>
             </article>
             <article class="download-card">
               <div>
-                <h3 data-i18n="sourceTitle">Codigo fonte</h3>
-                <p data-i18n="sourceText">Veja a implementacao, abra issues e acompanhe releases.</p>
-              </div>
-              <div class="download-links">
-                <a class="download-link" href="https://github.com/mpblima/passwordKeeper" target="_blank" rel="noreferrer">GitHub</a>
+                <h3 data-i18n="chooseTitle">Qual arquivo escolher?</h3>
+                <p data-i18n="chooseText">Windows: use EXE. macOS: escolha Apple Silicon para Macs novos ou Intel para Macs antigos. Linux: comece pelo AppImage.</p>
               </div>
             </article>
             <article class="download-card">
               <div>
-                <h3 data-i18n="releaseTitle">Release completa</h3>
-                <p data-i18n="releaseText">Confira todos os assets, checksums e historico no GitHub.</p>
-              </div>
-              <div class="download-links">
-                <a class="download-link" href="https://github.com/mpblima/passwordKeeper/releases/tag/v0.2.5" target="_blank" rel="noreferrer" data-i18n="releaseLink">Abrir release</a>
+                <h3 data-i18n="installTitle">Primeiro uso</h3>
+                <p data-i18n="installText">Instale, crie uma senha mestra e comece adicionando suas contas mais importantes. A sincronizacao pelo Drive pode ser ativada depois.</p>
               </div>
             </article>
           </div>
@@ -759,7 +751,7 @@
     <footer>
       <div class="shell footer-inner">
         <span>Password Keeper</span>
-        <span data-i18n="footerText">Projeto open source para cofres criptografados multiplataforma.</span>
+        <span data-i18n="footerText">Cofre de senhas criptografado para desktop e Android.</span>
       </div>
     </footer>
 
@@ -769,24 +761,23 @@
           navFeatures: "Recursos",
           navSecurity: "Seguranca",
           navDownloads: "Downloads",
-          navGithub: "GitHub",
           navCta: "Baixar",
           heroTitle: "Senhas seguras, sob seu controle.",
           heroText: "Um cofre criptografado para guardar, sincronizar e compartilhar credenciais sem entregar sua senha mestra.",
           heroPrimary: "Baixar agora",
-          heroSecondary: "Ver codigo",
-          proofOneTitle: "Local-first",
-          proofOneText: "Criptografia antes do disco e da nuvem.",
-          proofTwoTitle: "4 plataformas",
+          heroSecondary: "Conhecer recursos",
+          proofOneTitle: "No seu aparelho",
+          proofOneText: "Protecao antes de salvar ou sincronizar.",
+          proofTwoTitle: "4 sistemas",
           proofTwoText: "Linux, Windows, macOS e Android.",
-          proofThreeTitle: "Drive sync",
+          proofThreeTitle: "Google Drive",
           proofThreeText: "Sincronizacao via Google Drive.",
           proofFourTitle: "Compartilhe",
           proofFourText: "Acesso por senha separada.",
           featuresTitle: "Feito para credenciais reais.",
-          featuresText: "Guarde contas, notas, URLs, grupos e favoritos em um app nativo, rapido e desenhado para uso diario.",
+          featuresText: "Guarde contas, notas, URLs, grupos e favoritos em um app simples, rapido e feito para o dia a dia.",
           featureOneTitle: "Cofre criptografado",
-          featureOneText: "Cada arquivo .keep e protegido por AES-256-GCM com chave derivada via PBKDF2.",
+          featureOneText: "Suas senhas ficam trancadas por uma senha mestra que so voce conhece.",
           featureTwoTitle: "Organizacao clara",
           featureTwoText: "Use grupos, favoritos, busca, icones e visualizacoes em grade ou lista para encontrar tudo rapido.",
           featureThreeTitle: "Senhas fortes",
@@ -795,62 +786,62 @@
           featureFourText: "Mantenha tudo local ou sincronize o arquivo criptografado entre seus dispositivos.",
           featureFiveTitle: "Colaboracao segura",
           featureFiveText: "Compartilhe um cofre, grupo ou entrada com permissao de leitura ou edicao.",
+          featureSixTitle: "Tudo em um so lugar",
+          featureSixText: "Salve logins, sites, observacoes importantes e dados de acesso sem espalhar informacoes em planilhas ou mensagens.",
           securityTitle: "A senha mestra fica com voce.",
-          securityText: "Password Keeper nao tem servidor proprio. O arquivo no Drive e opaco sem uma senha autorizada.",
-          securityOneStrong: "Envelope multi-senha:",
-          securityOneText: "cada colaborador desbloqueia a mesma chave interna com sua propria senha.",
-          securityTwoStrong: "Auto-lock:",
-          securityTwoText: "o cofre bloqueia apos inatividade para reduzir exposicao local.",
-          securityThreeStrong: "Sem backend extra:",
-          securityThreeText: "sincronizacao e compartilhamento usam a conta Google do usuario.",
-          securityFourStrong: "Codigo aberto:",
-          securityFourText: "a arquitetura, os fluxos e a criptografia podem ser auditados no repositorio.",
-          architectureTitle: "Simples de entender.",
-          architectureText: "A arquitetura foi pensada para reduzir superficie de ataque e manter os dados legiveis apenas no app desbloqueado.",
-          archOneTitle: "Criptografa localmente",
-          archOneText: "O React envia os dados para o servico de criptografia antes de salvar ou sincronizar.",
-          archTwoTitle: "Salva arquivo .keep",
-          archTwoText: "O cofre vira um documento criptografado que pode ficar no disco ou no Google Drive.",
-          archThreeTitle: "Sincroniza mudancas",
-          archThreeText: "A Drive Changes API avisa quando um arquivo muda, evitando downloads desnecessarios.",
+          securityText: "Password Keeper foi feito para que suas senhas nao fiquem expostas. Mesmo quando voce sincroniza, o arquivo continua protegido.",
+          securityOneStrong: "Senha mestra:",
+          securityOneText: "e a chave principal do seu cofre. Sem ela, o arquivo nao abre.",
+          securityTwoStrong: "Bloqueio automatico:",
+          securityTwoText: "se voce ficar um tempo sem usar, o cofre fecha sozinho.",
+          securityThreeStrong: "Sincronizacao protegida:",
+          securityThreeText: "o Google Drive guarda apenas o arquivo criptografado, nao suas senhas legiveis.",
+          securityFourStrong: "Compartilhamento controlado:",
+          securityFourText: "voce escolhe o que compartilhar e se a outra pessoa pode apenas ver ou tambem editar.",
+          architectureTitle: "Como funciona na pratica.",
+          architectureText: "Voce nao precisa entender criptografia para usar. O fluxo foi pensado para ser direto desde o primeiro cofre.",
+          archOneTitle: "1. Crie sua senha mestra",
+          archOneText: "Ela protege tudo. Escolha uma senha forte, memoravel e diferente das suas outras senhas.",
+          archTwoTitle: "2. Cadastre suas contas",
+          archTwoText: "Organize por grupos, favorite os acessos importantes e encontre tudo pela busca.",
+          archThreeTitle: "3. Use em outros dispositivos",
+          archThreeText: "Se quiser, conecte o Google Drive para abrir o mesmo cofre no desktop e no Android.",
           downloadsTitle: "Baixe para sua plataforma.",
-          downloadsText: "Escolha o pacote da sua plataforma. Os links apontam para os assets oficiais da release no GitHub.",
+          downloadsText: "Escolha o sistema onde voce quer instalar. Se estiver em duvida no Windows, use o EXE. No Linux, AppImage costuma ser a opcao mais simples.",
           windowsText: "Instalador classico para maquinas x64.",
           macText: "Pacotes DMG para Apple Silicon e Intel.",
           linuxText: "Escolha AppImage, Debian/Ubuntu ou RPM.",
           androidText: "APK assinado para instalacao manual.",
-          sourceTitle: "Codigo fonte",
-          sourceText: "Veja a implementacao, abra issues e acompanhe releases.",
-          releaseTitle: "Release completa",
-          releaseText: "Confira todos os assets, checksums e historico no GitHub.",
-          releaseLink: "Abrir release",
+          chooseTitle: "Qual arquivo escolher?",
+          chooseText: "Windows: use EXE. macOS: escolha Apple Silicon para Macs novos ou Intel para Macs antigos. Linux: comece pelo AppImage.",
+          installTitle: "Primeiro uso",
+          installText: "Instale, crie uma senha mestra e comece adicionando suas contas mais importantes. A sincronizacao pelo Drive pode ser ativada depois.",
           ctaTitle: "Leve seu cofre para onde trabalha.",
           ctaText: "Comece local, conecte o Drive quando precisar e compartilhe apenas o que faz sentido.",
           ctaButton: "Escolher download",
-          footerText: "Projeto open source para cofres criptografados multiplataforma."
+          footerText: "Cofre de senhas criptografado para desktop e Android."
         },
         en: {
           navFeatures: "Features",
           navSecurity: "Security",
           navDownloads: "Downloads",
-          navGithub: "GitHub",
           navCta: "Download",
           heroTitle: "Secure passwords, under your control.",
           heroText: "An encrypted vault for storing, syncing, and sharing credentials without giving away your master password.",
           heroPrimary: "Download now",
-          heroSecondary: "View code",
-          proofOneTitle: "Local-first",
-          proofOneText: "Encryption before disk and cloud.",
-          proofTwoTitle: "4 platforms",
+          heroSecondary: "Explore features",
+          proofOneTitle: "On your device",
+          proofOneText: "Protected before saving or syncing.",
+          proofTwoTitle: "4 systems",
           proofTwoText: "Linux, Windows, macOS, and Android.",
-          proofThreeTitle: "Drive sync",
+          proofThreeTitle: "Google Drive",
           proofThreeText: "Sync through Google Drive.",
           proofFourTitle: "Share",
           proofFourText: "Access with a separate password.",
           featuresTitle: "Built for real credentials.",
-          featuresText: "Store accounts, notes, URLs, groups, and favorites in a native app designed for daily use.",
+          featuresText: "Store accounts, notes, URLs, groups, and favorites in a simple app designed for daily use.",
           featureOneTitle: "Encrypted vault",
-          featureOneText: "Every .keep file is protected with AES-256-GCM and a PBKDF2-derived key.",
+          featureOneText: "Your passwords are locked by a master password that only you know.",
           featureTwoTitle: "Clear organization",
           featureTwoText: "Use groups, favorites, search, icons, and grid or list views to find everything fast.",
           featureThreeTitle: "Strong passwords",
@@ -859,39 +850,40 @@
           featureFourText: "Keep everything local or sync the encrypted file across your devices.",
           featureFiveTitle: "Secure collaboration",
           featureFiveText: "Share a vault, group, or entry with read or edit permission.",
+          featureSixTitle: "Everything in one place",
+          featureSixText: "Save logins, sites, important notes, and access details without spreading information across spreadsheets or messages.",
           securityTitle: "The master password stays with you.",
-          securityText: "Password Keeper has no custom backend. The Drive file is opaque without an authorized password.",
-          securityOneStrong: "Multi-password envelope:",
-          securityOneText: "each collaborator unlocks the same internal key with their own password.",
+          securityText: "Password Keeper is designed so your passwords stay protected. Even when you sync, the file remains encrypted.",
+          securityOneStrong: "Master password:",
+          securityOneText: "it is the main key to your vault. Without it, the file does not open.",
           securityTwoStrong: "Auto-lock:",
-          securityTwoText: "the vault locks after inactivity to reduce local exposure.",
-          securityThreeStrong: "No extra backend:",
-          securityThreeText: "sync and sharing use the user's Google account.",
-          securityFourStrong: "Open source:",
-          securityFourText: "the architecture, flows, and encryption can be audited in the repository.",
-          architectureTitle: "Simple to reason about.",
-          architectureText: "The architecture reduces attack surface and keeps data readable only inside the unlocked app.",
-          archOneTitle: "Encrypts locally",
-          archOneText: "React sends data to the encryption service before saving or syncing.",
-          archTwoTitle: "Saves a .keep file",
-          archTwoText: "The vault becomes an encrypted document on disk or Google Drive.",
-          archThreeTitle: "Syncs changes",
-          archThreeText: "The Drive Changes API reports file changes and avoids unnecessary downloads.",
+          securityTwoText: "the vault closes by itself after a period without use.",
+          securityThreeStrong: "Protected sync:",
+          securityThreeText: "Google Drive stores only the encrypted file, not readable passwords.",
+          securityFourStrong: "Controlled sharing:",
+          securityFourText: "you choose what to share and whether the other person can only view or also edit.",
+          architectureTitle: "How it works in practice.",
+          architectureText: "You do not need to understand encryption to use it. The flow is designed to be direct from the first vault.",
+          archOneTitle: "1. Create your master password",
+          archOneText: "It protects everything. Choose a strong, memorable password that is different from your other passwords.",
+          archTwoTitle: "2. Add your accounts",
+          archTwoText: "Organize by groups, mark important accounts as favorites, and find everything with search.",
+          archThreeTitle: "3. Use it on other devices",
+          archThreeText: "If you want, connect Google Drive to open the same vault on desktop and Android.",
           downloadsTitle: "Download for your platform.",
-          downloadsText: "Choose your package. Links point to the official release assets on GitHub.",
+          downloadsText: "Choose where you want to install it. If you are unsure on Windows, use EXE. On Linux, AppImage is usually the simplest option.",
           windowsText: "Classic installer for x64 machines.",
           macText: "DMG packages for Apple Silicon and Intel.",
           linuxText: "Choose AppImage, Debian/Ubuntu, or RPM.",
           androidText: "Signed APK for manual installation.",
-          sourceTitle: "Source code",
-          sourceText: "Review the implementation, open issues, and follow releases.",
-          releaseTitle: "Full release",
-          releaseText: "See every asset, checksum, and release history on GitHub.",
-          releaseLink: "Open release",
+          chooseTitle: "Which file should I choose?",
+          chooseText: "Windows: use EXE. macOS: choose Apple Silicon for newer Macs or Intel for older Macs. Linux: start with AppImage.",
+          installTitle: "First use",
+          installText: "Install it, create a master password, and start by adding your most important accounts. Drive sync can be enabled later.",
           ctaTitle: "Take your vault where you work.",
           ctaText: "Start local, connect Drive when needed, and share only what makes sense.",
           ctaButton: "Choose download",
-          footerText: "Open source project for encrypted cross-platform vaults."
+          footerText: "Encrypted password vault for desktop and Android."
         }
       };
 
