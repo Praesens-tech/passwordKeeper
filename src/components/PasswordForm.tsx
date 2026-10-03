@@ -4,6 +4,8 @@ import { useVaultStore } from "../store/vaultStore";
 import { PasswordEntry } from "../types/vault";
 import { generatePassword, measurePasswordStrength } from "../services/crypto";
 import { IconPicker } from "./IconPicker";
+import { IconDisplay } from "./IconDisplay";
+import { isImageIcon } from "../services/imageUtils";
 
 interface PasswordFormProps {
   entry?: PasswordEntry;
@@ -71,7 +73,7 @@ export function PasswordForm({ entry, defaultGroupId, onClose }: PasswordFormPro
                 onClick={() => setShowIconPicker(!showIconPicker)}
                 className="w-12 h-12 rounded-xl bg-vault-sidebar border border-vault-border text-2xl flex items-center justify-center hover:border-vault-primary transition-colors"
               >
-                {form.icon}
+                <IconDisplay icon={form.icon} size="w-10 h-10" />
               </button>
               {showIconPicker && (
                 <div className="absolute top-14 left-0 z-10">
@@ -249,18 +251,18 @@ export function PasswordForm({ entry, defaultGroupId, onClose }: PasswordFormPro
                 <option value="">Sem grupo</option>
                 {vault?.groups.map((g) => (
                   <option key={g.id} value={g.id}>
-                    {g.icon} {g.name}
+                    {isImageIcon(g.icon) ? "" : g.icon} {g.name}
                   </option>
                 ))}
                 {entrySource?.groups.map((g) => (
                   <option key={g.id} value={g.id}>
-                    {g.icon} {g.name}
+                    {isImageIcon(g.icon) ? "" : g.icon} {g.name}
                   </option>
                 ))}
                 {!entrySource && sharedSources.flatMap((source) =>
                   source.groups.map((g) => (
                     <option key={g.id} value={g.id}>
-                      {g.icon} {source.owner} / {g.name}
+                      {isImageIcon(g.icon) ? "" : g.icon} {source.owner} / {g.name}
                     </option>
                   ))
                 )}

@@ -106,7 +106,7 @@ export function PasswordDetail() {
               )}
               {group && (
                 <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full bg-vault-card border border-vault-border text-xs text-vault-textMuted">
-                  {group.icon} {group.name}
+                  <IconDisplay icon={group.icon} size="w-4 h-4" /> {group.name}
                 </span>
               )}
               {sharedSource && (

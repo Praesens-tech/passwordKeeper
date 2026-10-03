@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import { useVaultStore } from "../store/vaultStore";
 import { PasswordGroup } from "../types/vault";
 import { IconPicker } from "./IconPicker";
+import { IconDisplay } from "./IconDisplay";
 
 interface GroupFormProps {
   group?: PasswordGroup;
@@ -41,7 +42,7 @@ export function GroupForm({ group, onClose }: GroupFormProps) {
                 onClick={() => setShowIconPicker(!showIconPicker)}
                 className="w-12 h-12 rounded-xl bg-vault-sidebar border border-vault-border text-2xl flex items-center justify-center hover:border-vault-primary transition-colors"
               >
-                {form.icon}
+                <IconDisplay icon={form.icon} size="w-10 h-10" />
               </button>
               {showIconPicker && (
                 <div className="absolute top-14 left-0 z-10">

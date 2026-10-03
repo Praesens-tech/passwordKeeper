@@ -46,6 +46,23 @@ describe('PasswordDetail Component', () => {
     expect(screen.getByText('Test notes')).toBeInTheDocument();
   });
 
+  it('renders the group image without exposing its encoded contents', () => {
+    const icon = 'data:image/jpeg;base64,dGVzdA==';
+    const state = useVaultStore();
+    vi.mocked(useVaultStore).mockReturnValue({
+      ...state,
+      vault: {
+        ...state.vault,
+        entries: [{ ...mockEntry, groupId: 'work' }],
+        groups: [{ id: 'work', name: 'Work', icon }],
+      },
+    } as any);
+    const { container } = render(<PasswordDetail />);
+    expect(screen.getByText('Work')).toBeInTheDocument();
+    expect(container.querySelector(`img[src="${icon}"]`)).toBeInTheDocument();
+    expect(container.textContent).not.toContain('data:image/');
+  });
+
   it('should copy username to clipboard', async () => {
     render(<PasswordDetail />);
 
