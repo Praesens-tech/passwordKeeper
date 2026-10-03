@@ -96,12 +96,21 @@
       const params = new URLSearchParams(window.location.search);
       const file = params.get("file");
       const target = downloads[file];
+      const isPortuguese = /^pt(?:-|$)/.test((navigator.language || "en").toLowerCase());
+      document.documentElement.lang = isPortuguese ? "pt-BR" : "en";
+      if (!isPortuguese) {
+        document.getElementById("title").textContent = "Preparing download";
+        document.getElementById("message").textContent = "Your download should start automatically shortly.";
+        document.getElementById("fallback").textContent = "Back to the home page";
+      }
 
       if (target) {
         window.location.replace(target);
       } else {
-        document.getElementById("title").textContent = "Download nao encontrado";
-        document.getElementById("message").textContent = "Volte para a pagina inicial e escolha uma das opcoes disponiveis.";
+        document.getElementById("title").textContent = isPortuguese ? "Download nao encontrado" : "Download not found";
+        document.getElementById("message").textContent = isPortuguese
+          ? "Volte para a pagina inicial e escolha uma das opcoes disponiveis."
+          : "Return to the home page and choose one of the available options.";
       }
     </script>
   </body>

@@ -959,12 +959,12 @@
         }
       };
 
-      let currentLanguage = localStorage.getItem("pk-site-language") || "pt";
+      const browserLanguage = (navigator.language || "en").toLowerCase();
+      let currentLanguage = /^pt(?:-|$)/.test(browserLanguage) ? "pt" : "en";
       const toggle = document.getElementById("languageToggle");
 
       function applyLanguage(language) {
         currentLanguage = language;
-        localStorage.setItem("pk-site-language", language);
         document.documentElement.lang = language === "pt" ? "pt-BR" : "en";
         document.querySelectorAll("[data-i18n]").forEach((node) => {
           const key = node.getAttribute("data-i18n");
