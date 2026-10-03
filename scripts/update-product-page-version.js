@@ -34,6 +34,14 @@ for (const [key, url] of Object.entries(urls)) {
 writeFileSync(downloadPath, downloadHtml);
 
 let indexHtml = readFileSync(indexPath, "utf8");
+const currentTag = indexHtml.match(/<strong data-current-version>(v[^<]+)<\/strong>/)?.[1];
+if (currentTag && currentTag !== tag) {
+  const previousEntry = `\n              <li>\n                <strong>${currentTag}</strong>\n                <span data-i18n="historyPublished">Versao publicada para Windows, macOS, Linux e Android.</span>\n              </li>`;
+  indexHtml = indexHtml.replace(
+    /(<ul class="version-list">\s*<li>[\s\S]*?<\/li>)/,
+    (entry) => entry + previousEntry,
+  );
+}
 indexHtml = indexHtml.replace(
   /(<strong data-current-version>)v[^<]+(<\/strong>)/,
   `$1${tag}$2`,
