@@ -5,25 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex" />
     <title>Password Keeper - Download</title>
+    <meta name="theme-color" content="#D85A30" />
+    <link rel="icon" type="image/svg+xml" href="./assets/praesens_simbolo.svg" />
     <style>
       :root {
         color-scheme: light dark;
-        --bg: #f7f9f7;
+        --bg: #FAECE7;
         --surface: #ffffff;
-        --text: #101615;
-        --muted: #5c6864;
-        --line: #d8e4dd;
-        --accent: #0f9f6e;
+        --text: #4A1B0C;
+        --muted: #444441;
+        --line: #F5C4B3;
+        --accent: #993C1D;
       }
 
       @media (prefers-color-scheme: dark) {
         :root {
-          --bg: #07100d;
-          --surface: #0d1814;
-          --text: #eff7f2;
-          --muted: #a6b8af;
-          --line: #25372f;
-          --accent: #34d399;
+          --bg: #4A1B0C;
+          --surface: #4A1B0C;
+          --text: #FAECE7;
+          --muted: #F5C4B3;
+          --line: #993C1D;
+          --accent: #F0997B;
         }
       }
 
@@ -36,29 +38,23 @@
         margin: 0;
         display: grid;
         place-items: center;
-        padding: 24px;
+        padding: 16px;
         background: var(--bg);
         color: var(--text);
-        font-family:
-          ui-sans-serif,
-          system-ui,
-          -apple-system,
-          BlinkMacSystemFont,
-          "Segoe UI",
-          sans-serif;
+        font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
       }
 
       main {
         width: min(520px, 100%);
         border: 1px solid var(--line);
-        border-radius: 18px;
+        border-radius: 8px;
         background: var(--surface);
-        padding: 28px;
+        padding: 20px;
       }
 
       h1 {
         margin: 0;
-        font-size: clamp(1.8rem, 8vw, 3rem);
+        font-size: 2rem;
         line-height: 1;
       }
 
@@ -76,6 +72,10 @@
   </head>
   <body>
     <main>
+      <picture style="display:block; padding:30px; margin-bottom:24px">
+        <source media="(prefers-color-scheme: dark)" srcset="./assets/praesens_logo_escuro.svg" />
+        <img src="./assets/praesens_logo_principal.svg" alt="Praesens.tech" width="180" height="48" />
+      </picture>
       <h1 id="title">Preparando download</h1>
       <p id="message">Seu download deve comecar automaticamente em instantes.</p>
       <p><a href="./" id="fallback">Voltar para a pagina inicial</a></p>
