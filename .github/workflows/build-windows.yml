@@ -2,9 +2,6 @@ name: Build Windows
 
 on:
   workflow_dispatch:          # disparo manual pelo GitHub
-  push:
-    tags:
-      - 'v*'                  # ou automaticamente em tags como v1.0.0
 
 jobs:
   build:
@@ -38,15 +35,14 @@ jobs:
           VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
           VITE_GOOGLE_CLIENT_SECRET: ${{ secrets.VITE_GOOGLE_CLIENT_SECRET }}
           VITE_GOOGLE_ANDROID_CLIENT_ID: ${{ secrets.VITE_GOOGLE_ANDROID_CLIENT_ID }}
-        with:
-          # Cria um GitHub Release com os instaladores como assets
-          tagName: ${{ github.ref_name }}
-          releaseName: 'Password Keeper ${{ github.ref_name }}'
-          releaseBody: |
-            ## Password Keeper ${{ github.ref_name }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
-            ### Instalação (Windows)
-            - Baixe o arquivo `.msi` (recomendado) ou `.exe` (NSIS)
-            - Execute e siga o assistente de instalação
-          releaseDraft: true      # fica como rascunho até você publicar manualmente
-          prerelease: false
+      - name: Upload Windows installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installers
+          path: |
+            src-tauri/target/release/bundle/msi/*
+            src-tauri/target/release/bundle/nsis/*
+          if-no-files-found: error
