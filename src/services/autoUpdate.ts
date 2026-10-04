@@ -6,7 +6,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { version as APP_VERSION } from "../../package.json";
 
 const SKIPPED_UPDATE_KEY = "pk_skipped_update_version";
-const LATEST_RELEASE_URL = "https://api.github.com/repos/mpblima/passwordKeeper/releases/latest";
+const LATEST_RELEASE_URL = "https://api.github.com/repos/Praesens-tech/passwordKeeper/releases/latest";
 
 type UpdateCheckMode = "startup" | "manual";
 

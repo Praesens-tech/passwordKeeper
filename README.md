@@ -8,18 +8,18 @@ O objetivo deste README e ser o documento de referencia do projeto: produto, arq
 
 Versao publica mais recente: **v0.2.5**
 
-Pagina da release: [Password Keeper v0.2.5](https://github.com/mpblima/passwordKeeper/releases/tag/v0.2.5)
+Pagina da release: [Password Keeper v0.2.5](https://github.com/Praesens-tech/passwordKeeper/releases/tag/v0.2.5)
 
 | Plataforma | Arquivo recomendado | Link direto |
 |---|---:|---|
-| Windows | `.exe` installer | [Password.Keeper_0.2.5_x64-setup.exe](https://github.com/mpblima/passwordKeeper/releases/download/v0.2.5/Password.Keeper_0.2.5_x64-setup.exe) |
-| Windows | `.msi` installer | [Password.Keeper_0.2.5_x64_en-US.msi](https://github.com/mpblima/passwordKeeper/releases/download/v0.2.5/Password.Keeper_0.2.5_x64_en-US.msi) |
-| macOS Apple Silicon | `.dmg` | [Password.Keeper_0.2.5_aarch64.dmg](https://github.com/mpblima/passwordKeeper/releases/download/v0.2.5/Password.Keeper_0.2.5_aarch64.dmg) |
-| macOS Intel | `.dmg` | [Password.Keeper_0.2.5_x64.dmg](https://github.com/mpblima/passwordKeeper/releases/download/v0.2.5/Password.Keeper_0.2.5_x64.dmg) |
-| Linux | `.AppImage` | [Password.Keeper_0.2.5_amd64.AppImage](https://github.com/mpblima/passwordKeeper/releases/download/v0.2.5/Password.Keeper_0.2.5_amd64.AppImage) |
-| Linux Debian/Ubuntu | `.deb` | [Password.Keeper_0.2.5_amd64.deb](https://github.com/mpblima/passwordKeeper/releases/download/v0.2.5/Password.Keeper_0.2.5_amd64.deb) |
-| Linux Fedora/RHEL | `.rpm` | [Password.Keeper-0.2.5-1.x86_64.rpm](https://github.com/mpblima/passwordKeeper/releases/download/v0.2.5/Password.Keeper-0.2.5-1.x86_64.rpm) |
-| Android | `.apk` side-loading | [PasswordKeeper-0.2.5-android.apk](https://github.com/mpblima/passwordKeeper/releases/download/v0.2.5/PasswordKeeper-0.2.5-android.apk) |
+| Windows | `.exe` installer | [Password.Keeper_0.2.5_x64-setup.exe](https://github.com/Praesens-tech/passwordKeeper/releases/download/v0.2.5/Password.Keeper_0.2.5_x64-setup.exe) |
+| Windows | `.msi` installer | [Password.Keeper_0.2.5_x64_en-US.msi](https://github.com/Praesens-tech/passwordKeeper/releases/download/v0.2.5/Password.Keeper_0.2.5_x64_en-US.msi) |
+| macOS Apple Silicon | `.dmg` | [Password.Keeper_0.2.5_aarch64.dmg](https://github.com/Praesens-tech/passwordKeeper/releases/download/v0.2.5/Password.Keeper_0.2.5_aarch64.dmg) |
+| macOS Intel | `.dmg` | [Password.Keeper_0.2.5_x64.dmg](https://github.com/Praesens-tech/passwordKeeper/releases/download/v0.2.5/Password.Keeper_0.2.5_x64.dmg) |
+| Linux | `.AppImage` | [Password.Keeper_0.2.5_amd64.AppImage](https://github.com/Praesens-tech/passwordKeeper/releases/download/v0.2.5/Password.Keeper_0.2.5_amd64.AppImage) |
+| Linux Debian/Ubuntu | `.deb` | [Password.Keeper_0.2.5_amd64.deb](https://github.com/Praesens-tech/passwordKeeper/releases/download/v0.2.5/Password.Keeper_0.2.5_amd64.deb) |
+| Linux Fedora/RHEL | `.rpm` | [Password.Keeper-0.2.5-1.x86_64.rpm](https://github.com/Praesens-tech/passwordKeeper/releases/download/v0.2.5/Password.Keeper-0.2.5-1.x86_64.rpm) |
+| Android | `.apk` side-loading | [PasswordKeeper-0.2.5-android.apk](https://github.com/Praesens-tech/passwordKeeper/releases/download/v0.2.5/PasswordKeeper-0.2.5-android.apk) |
 
 Observacoes:
 
@@ -60,7 +60,7 @@ A pagina promocional para GitHub Pages fica em:
 Quando o GitHub Pages estiver apontando para a pasta `docs`, a URL esperada sera:
 
 ```text
-https://mpblima.github.io/passwordKeeper/
+https://praesens-tech.github.io/passwordKeeper/
 ```
 
 A pagina tem portugues como idioma padrao e alternancia para ingles.
@@ -633,7 +633,7 @@ O script [scripts/update-product-page-version.js](scripts/update-product-page-ve
 Desktop usa `@tauri-apps/plugin-updater` apontando para:
 
 ```text
-https://github.com/mpblima/passwordKeeper/releases/latest/download/latest.json
+https://github.com/Praesens-tech/passwordKeeper/releases/latest/download/latest.json
 ```
 
 Fluxo no app:

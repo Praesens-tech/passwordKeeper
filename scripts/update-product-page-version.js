@@ -16,14 +16,14 @@ const downloadPath = join(root, "docs", "download.html");
 const indexPath = join(root, "docs", "index.html");
 
 const urls = {
-  "windows-exe": `https://github.com/mpblima/passwordKeeper/releases/download/${tag}/Password.Keeper_${version}_x64-setup.exe`,
-  "windows-msi": `https://github.com/mpblima/passwordKeeper/releases/download/${tag}/Password.Keeper_${version}_x64_en-US.msi`,
-  "mac-arm": `https://github.com/mpblima/passwordKeeper/releases/download/${tag}/Password.Keeper_${version}_aarch64.dmg`,
-  "mac-intel": `https://github.com/mpblima/passwordKeeper/releases/download/${tag}/Password.Keeper_${version}_x64.dmg`,
-  "linux-appimage": `https://github.com/mpblima/passwordKeeper/releases/download/${tag}/Password.Keeper_${version}_amd64.AppImage`,
-  "linux-deb": `https://github.com/mpblima/passwordKeeper/releases/download/${tag}/Password.Keeper_${version}_amd64.deb`,
-  "linux-rpm": `https://github.com/mpblima/passwordKeeper/releases/download/${tag}/Password.Keeper-${version}-1.x86_64.rpm`,
-  "android-apk": `https://github.com/mpblima/passwordKeeper/releases/download/${tag}/PasswordKeeper-${version}-android.apk`,
+  "windows-exe": `https://github.com/Praesens-tech/passwordKeeper/releases/download/${tag}/Password.Keeper_${version}_x64-setup.exe`,
+  "windows-msi": `https://github.com/Praesens-tech/passwordKeeper/releases/download/${tag}/Password.Keeper_${version}_x64_en-US.msi`,
+  "mac-arm": `https://github.com/Praesens-tech/passwordKeeper/releases/download/${tag}/Password.Keeper_${version}_aarch64.dmg`,
+  "mac-intel": `https://github.com/Praesens-tech/passwordKeeper/releases/download/${tag}/Password.Keeper_${version}_x64.dmg`,
+  "linux-appimage": `https://github.com/Praesens-tech/passwordKeeper/releases/download/${tag}/Password.Keeper_${version}_amd64.AppImage`,
+  "linux-deb": `https://github.com/Praesens-tech/passwordKeeper/releases/download/${tag}/Password.Keeper_${version}_amd64.deb`,
+  "linux-rpm": `https://github.com/Praesens-tech/passwordKeeper/releases/download/${tag}/Password.Keeper-${version}-1.x86_64.rpm`,
+  "android-apk": `https://github.com/Praesens-tech/passwordKeeper/releases/download/${tag}/PasswordKeeper-${version}-android.apk`,
 };
 
 let downloadHtml = readFileSync(downloadPath, "utf8");

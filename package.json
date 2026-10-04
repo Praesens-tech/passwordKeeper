@@ -50,7 +50,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mpblima/passwordKeeper.git"
+    "url": "git+https://github.com/Praesens-tech/passwordKeeper.git"
   },
   "keywords": [
     "password-manager",
@@ -61,7 +61,7 @@
   "author": "Marcos Paulo Blima",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/mpblima/passwordKeeper/issues"
+    "url": "https://github.com/Praesens-tech/passwordKeeper/issues"
   },
-  "homepage": "https://github.com/mpblima/passwordKeeper#readme"
+  "homepage": "https://github.com/Praesens-tech/passwordKeeper#readme"
 }
