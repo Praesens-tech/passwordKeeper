@@ -359,6 +359,17 @@
         background: var(--surface);
       }
 
+      .download-counter {
+        margin-top: 24px;
+        color: var(--muted);
+      }
+
+      .download-counter strong {
+        color: var(--accent-strong);
+        font-size: 1.5rem;
+        font-variant-numeric: tabular-nums;
+      }
+
       .download-grid {
         margin-top: 34px;
         display: grid;
@@ -721,6 +732,12 @@
               Escolha o sistema onde voce quer instalar. Se estiver em duvida no Windows, use o EXE. No Linux, AppImage costuma ser a opcao mais simples.
             </p>
           </div>
+          <p class="download-counter" role="status" aria-live="polite">
+            <strong id="downloadCount">—</strong>
+            <span data-i18n="downloadCountLabel">downloads de instaladores</span><br />
+            <small id="downloadCountStatus">Consultando o GitHub…</small>
+          </p>
+          <noscript>Ative o JavaScript para consultar o total de downloads no GitHub.</noscript>
           <div class="download-grid">
             <article class="download-card">
               <div>
@@ -873,6 +890,10 @@
           archTwoText: "Organize por grupos, favorite os acessos importantes e encontre tudo pela busca.",
           archThreeTitle: "3. Use em outros dispositivos",
           archThreeText: "Se quiser, conecte o Google Drive para abrir o mesmo cofre no desktop e no Android.",
+          downloadCountLabel: "downloads de instaladores",
+          downloadCountLoading: "Consultando o GitHub…",
+          downloadCountSource: "Total de todas as versões públicas · Fonte: GitHub",
+          downloadCountError: "Contagem indisponível no momento. Tente novamente mais tarde.",
           downloadsTitle: "Baixe para sua plataforma.",
           downloadsText: "Escolha o sistema onde voce quer instalar. Se estiver em duvida no Windows, use o EXE. No Linux, AppImage costuma ser a opcao mais simples.",
           windowsText: "Instalador classico para maquinas x64.",
@@ -943,6 +964,10 @@
           archTwoText: "Organize by groups, mark important accounts as favorites, and find everything with search.",
           archThreeTitle: "3. Use it on other devices",
           archThreeText: "If you want, connect Google Drive to open the same vault on desktop and Android.",
+          downloadCountLabel: "installer downloads",
+          downloadCountLoading: "Checking GitHub…",
+          downloadCountSource: "Total across all public releases · Source: GitHub",
+          downloadCountError: "Download count is currently unavailable. Try again later.",
           downloadsTitle: "Download for your platform.",
           downloadsText: "Choose where you want to install it. If you are unsure on Windows, use EXE. On Linux, AppImage is usually the simplest option.",
           windowsText: "Classic installer for x64 machines.",
@@ -969,6 +994,49 @@
       let currentLanguage = /^pt(?:-|$)/.test(browserLanguage) ? "pt" : "en";
       const toggle = document.getElementById("languageToggle");
 
+      let downloadTotal = null;
+      let downloadCountState = "downloadCountLoading";
+
+      function renderDownloadCount() {
+        document.getElementById("downloadCount").textContent = downloadTotal === null
+          ? "—"
+          : new Intl.NumberFormat(currentLanguage === "pt" ? "pt-BR" : "en-US").format(downloadTotal);
+        document.getElementById("downloadCountStatus").textContent = copy[currentLanguage][downloadCountState];
+      }
+
+      async function loadDownloadCount() {
+        try {
+          let total = 0;
+          let page = 1;
+          let releases;
+          do {
+            const response = await fetch(
+              `https://api.github.com/repos/Praesens-tech/passwordKeeper/releases?per_page=100&page=${page}`,
+              { headers: { Accept: "application/vnd.github+json" }, signal: AbortSignal.timeout(15000) }
+            );
+            if (!response.ok) throw new Error("Download count unavailable");
+            releases = await response.json();
+            if (!Array.isArray(releases)) throw new Error("Invalid release data");
+            for (const release of releases) {
+              if (release.draft || release.prerelease) continue;
+              for (const asset of release.assets || []) {
+                // Count installers only; signatures, update archives and metadata are excluded.
+                if (/\.(exe|msi|dmg|appimage|deb|rpm|apk)$/i.test(asset.name)
+                    && Number.isSafeInteger(asset.download_count) && asset.download_count >= 0) {
+                  total += asset.download_count;
+                }
+              }
+            }
+            page += 1;
+          } while (releases.length === 100);
+          downloadTotal = total;
+          downloadCountState = "downloadCountSource";
+        } catch {
+          downloadCountState = "downloadCountError";
+        }
+        renderDownloadCount();
+      }
+
       function applyLanguage(language) {
         currentLanguage = language;
         document.documentElement.lang = language === "pt" ? "pt-BR" : "en";
@@ -976,6 +1044,7 @@
           const key = node.getAttribute("data-i18n");
           if (copy[language][key]) node.textContent = copy[language][key];
         });
+        renderDownloadCount();
         toggle.textContent = language === "pt" ? "EN" : "PT";
         document.title = language === "pt"
           ? "Password Keeper - Cofre de senhas criptografado"
@@ -987,6 +1056,7 @@
       });
 
       applyLanguage(currentLanguage);
+      loadDownloadCount();
     </script>
   </body>
 </html>
