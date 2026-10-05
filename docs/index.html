@@ -359,14 +359,31 @@
         background: var(--surface);
       }
 
+      .download-statistics {
+        padding: 0 0 48px;
+      }
+
       .download-counter {
-        margin-top: 24px;
+        margin: 0;
+        padding: 32px 24px;
+        text-align: center;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface);
         color: var(--muted);
+      }
+
+      .download-counter small {
+        display: inline-block;
+        margin-top: 12px;
       }
 
       .download-counter strong {
         color: var(--accent-strong);
-        font-size: 1.5rem;
+        display: block;
+        font-size: 3rem;
+        line-height: 1.2;
+        margin-bottom: 8px;
         font-variant-numeric: tabular-nums;
       }
 
@@ -732,12 +749,6 @@
               Escolha o sistema onde voce quer instalar. Se estiver em duvida no Windows, use o EXE. No Linux, AppImage costuma ser a opcao mais simples.
             </p>
           </div>
-          <p class="download-counter" role="status" aria-live="polite">
-            <strong id="downloadCount">—</strong>
-            <span data-i18n="downloadCountLabel">downloads de instaladores</span><br />
-            <small id="downloadCountStatus">Consultando o GitHub…</small>
-          </p>
-          <noscript>Ative o JavaScript para consultar o total de downloads no GitHub.</noscript>
           <div class="download-grid">
             <article class="download-card">
               <div>
@@ -824,6 +835,16 @@
             </p>
           </div>
           <a class="button primary" href="#downloads" data-i18n="ctaButton">Escolher download</a>
+        </div>
+      </section>
+      <section id="download-statistics" class="download-statistics">
+        <div class="shell">
+          <p class="download-counter" role="status" aria-live="polite">
+            <strong id="downloadCount">—</strong>
+            <span data-i18n="downloadCountLabel">downloads de instaladores</span><br />
+            <small id="downloadCountStatus">Consultando o GitHub…</small>
+          </p>
+          <noscript>Ative o JavaScript para consultar o total de downloads no GitHub.</noscript>
         </div>
       </section>
     </main>
