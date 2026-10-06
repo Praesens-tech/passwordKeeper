@@ -3,15 +3,22 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Password Keeper - Cofre de senhas criptografado</title>
+    <title>Password Keeper | Gerenciador de senhas para PC e Android</title>
     <meta
       name="description"
-      content="Password Keeper e um cofre de senhas multiplataforma com criptografia local, Google Drive sync e compartilhamento seguro."
+      content="Organize suas senhas em um cofre criptografado no seu dispositivo. Baixe o Password Keeper para Windows, Linux, macOS e Android, com Google Drive opcional."
     />
-    <meta property="og:title" content="Password Keeper" />
+    <meta property="og:title" content="Password Keeper | Suas senhas organizadas" />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Password Keeper | Suas senhas organizadas" />
+    <meta name="twitter:description" content="Conheça a interface real e baixe o cofre de senhas para PC e Android." />
+    <meta name="twitter:image" content="https://praesens-tech.github.io/passwordKeeper/assets/password-keeper-hero.png" />
+    <meta property="og:image:alt" content="Apresentação do Password Keeper para computador e Android" />
     <meta
       property="og:description"
-      content="Cofre de senhas criptografado para desktop, Linux, macOS, Windows e Android."
+      content="Gerenciador de senhas com cofre local criptografado, grupos, busca e sincronização opcional pelo Google Drive."
     />
     <meta property="og:type" content="website" />
     <link rel="canonical" href="https://praesens-tech.github.io/passwordKeeper/" />
@@ -20,6 +27,8 @@
     <meta property="og:image" content="https://praesens-tech.github.io/passwordKeeper/assets/password-keeper-hero.png" />
     <meta name="theme-color" content="#D85A30" />
     <link rel="icon" type="image/svg+xml" href="./assets/praesens_simbolo.svg" />
+    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "Password Keeper", "url": "https://praesens-tech.github.io/passwordKeeper/", "applicationCategory": "SecurityApplication", "operatingSystem": "Windows, macOS, Linux, Android", "description": "Gerenciador de senhas com cofre local criptografado, grupos, favoritos, busca e sincronização opcional pelo Google Drive.", "image": "https://praesens-tech.github.io/passwordKeeper/assets/interface-organizacao.png", "publisher": {"@type": "Organization", "name": "Praesens.tech"}, "downloadUrl": "https://praesens-tech.github.io/passwordKeeper/#downloads", "featureList": ["Cofre local criptografado", "Grupos e favoritos", "Busca de credenciais", "Gerador de senhas", "Sincronização opcional pelo Google Drive"]}</script>
+    <link rel="sitemap" type="application/xml" href="./sitemap.xml" />
     <style>
       :root {
         color-scheme: light dark;
@@ -598,6 +607,21 @@
           width: 100%;
         }
       }
+
+      section[id] { scroll-margin-top: 88px; }
+      a:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+      .hero-copy h1 { max-width: 18ch; font-size: clamp(2.4rem, 4vw, 3.6rem); line-height: 1.08; }
+      .demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 32px; }
+      .demo-grid figure { margin: 0; min-width: 0; }
+      .demo-grid img { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; }
+      .demo-grid figcaption { margin-top: 14px; color: var(--muted); line-height: 1.6; }
+      .faq-list { margin-top: 28px; }
+      .faq-list details { padding: 20px 0; border-bottom: 1px solid var(--line); }
+      .faq-list summary { cursor: pointer; font-weight: 700; font-size: 1.1rem; }
+      .faq-list p { line-height: 1.7; max-width: 80ch; color: var(--muted); }
+      .text-link { text-decoration: underline; text-underline-offset: 4px; }
+      .download-note { color: var(--muted); line-height: 1.6; margin-top: 24px; }
+      @media (max-width: 620px) { .demo-grid { grid-template-columns: 1fr; } }
     </style>
   </head>
   <body>
@@ -609,9 +633,9 @@
         </a>
         <div class="nav-links" aria-label="Main navigation">
           <a href="#features" data-i18n="navFeatures">Recursos</a>
-          <a href="#security" data-i18n="navSecurity">Seguranca</a>
+          <a href="#security" data-i18n="navSecurity">Segurança</a>
           <a href="#downloads" data-i18n="navDownloads">Downloads</a>
-          <a href="#versions" data-i18n="navVersions">Versoes</a>
+          <a href="#versions" data-i18n="navVersions">Versões</a>
         </div>
         <div class="nav-actions">
           <button class="language-toggle" type="button" id="languageToggle" aria-label="Change language">EN</button>
@@ -624,13 +648,13 @@
       <section class="hero">
         <div class="shell hero-grid">
           <div class="hero-copy">
-            <h1 data-i18n="heroTitle">Password Keeper</h1>
+            <h1 data-i18n="heroTitle">Password Keeper: suas senhas organizadas.</h1>
             <p data-i18n="heroText">
-              Um cofre criptografado para guardar, sincronizar e compartilhar credenciais sem entregar sua senha mestra.
+              Guarde seus acessos em um cofre criptografado no seu dispositivo. Organize por grupos e encontre suas contas pela busca. Para Windows, Linux, macOS e Android.
             </p>
             <div class="hero-actions">
               <a class="button primary" href="#downloads" data-i18n="heroPrimary">Baixar agora</a>
-              <a class="button secondary" href="#features" data-i18n="heroSecondary">Conhecer recursos</a>
+              <a class="button secondary" href="#demonstracao" data-i18n="heroSecondary">Ver o aplicativo</a>
             </div>
             <div class="proof" aria-label="Product highlights">
               <div class="proof-item">
@@ -643,7 +667,7 @@
               </div>
               <div class="proof-item">
                 <strong data-i18n="proofThreeTitle">Drive sync</strong>
-                <span data-i18n="proofThreeText">Sincronizacao via Google Drive.</span>
+                <span data-i18n="proofThreeText">Sincronização via Google Drive.</span>
               </div>
               <div class="proof-item">
                 <strong data-i18n="proofFourTitle">Compartilhe</strong>
@@ -654,11 +678,25 @@
           <div class="hero-media">
             <img
               src="./assets/password-keeper-hero.png"
-              alt="Password Keeper running on laptop and Android phone"
+              alt="Ilustração do Password Keeper em computador e celular Android" fetchpriority="high"
               width="1536"
               height="960"
             />
           </div>
+        </div>
+      </section>
+
+      <section id="demonstracao">
+        <div class="shell">
+          <div class="section-title">
+            <h2 data-i18n="demoTitle">Veja o Password Keeper por dentro.</h2>
+            <p data-i18n="demoText">Capturas da interface real com contas fictícias. Conheça a organização e a busca antes de instalar.</p>
+          </div>
+          <div class="demo-grid">
+            <figure><img src="./assets/interface-organizacao.png" alt="Interface real do Password Keeper com o grupo Pessoal e três contas fictícias" width="1280" height="720" loading="lazy" decoding="async" /><figcaption data-i18n="demoGroups">Separe seus acessos por grupos, como Pessoal e Trabalho. Marque os mais usados como favoritos.</figcaption></figure>
+            <figure><img src="./assets/interface-busca.png" alt="Busca por E-mail na interface real do Password Keeper, com uma conta fictícia encontrada" width="1280" height="720" loading="lazy" decoding="async" /><figcaption data-i18n="demoSearch">Digite o nome da conta na busca para encontrar sua credencial. As senhas aparecem ocultas na lista.</figcaption></figure>
+          </div>
+          <div class="hero-actions"><a class="button primary" href="#downloads" data-i18n="demoCta">Experimentar no meu dispositivo</a><a class="button secondary" href="./como-organizar-senhas.html" data-i18n="guideCta">Guia para começar</a></div>
         </div>
       </section>
 
@@ -667,33 +705,33 @@
           <div class="section-title">
             <h2 data-i18n="featuresTitle">Feito para credenciais reais.</h2>
             <p data-i18n="featuresText">
-              Guarde contas, notas, URLs, grupos e favoritos em um app simples, rapido e feito para o dia a dia.
+              Guarde contas, notas, URLs, grupos e favoritos em um app simples, rápido e feito para o dia a dia.
             </p>
           </div>
           <div class="feature-grid">
             <article class="feature">
               <h3 data-i18n="featureOneTitle">Cofre criptografado</h3>
-              <p data-i18n="featureOneText">Suas senhas ficam trancadas por uma senha mestra que so voce conhece.</p>
+              <p data-i18n="featureOneText">Suas senhas ficam trancadas por uma senha mestra que só você conhece.</p>
             </article>
             <article class="feature">
-              <h3 data-i18n="featureTwoTitle">Organizacao clara</h3>
-              <p data-i18n="featureTwoText">Use grupos, favoritos, busca, icones e visualizacoes em grade ou lista para encontrar tudo rapido.</p>
+              <h3 data-i18n="featureTwoTitle">Organização clara</h3>
+              <p data-i18n="featureTwoText">Use grupos, favoritos, busca, ícones e visualizações em grade ou lista para encontrar tudo rápido.</p>
             </article>
             <article class="feature">
               <h3 data-i18n="featureThreeTitle">Senhas fortes</h3>
-              <p data-i18n="featureThreeText">Gere senhas com letras, numeros e simbolos, com indicador de forca antes de salvar.</p>
+              <p data-i18n="featureThreeText">Gere senhas com letras, números e símbolos, com indicador de força antes de salvar.</p>
             </article>
             <article class="feature">
               <h3 data-i18n="featureFourTitle">Google Drive opcional</h3>
               <p data-i18n="featureFourText">Mantenha tudo local ou sincronize o arquivo criptografado entre seus dispositivos.</p>
             </article>
             <article class="feature">
-              <h3 data-i18n="featureFiveTitle">Colaboracao segura</h3>
-              <p data-i18n="featureFiveText">Compartilhe um cofre, grupo ou entrada com permissao de leitura ou edicao.</p>
+              <h3 data-i18n="featureFiveTitle">Colaboração segura</h3>
+              <p data-i18n="featureFiveText">Compartilhe um cofre, grupo ou entrada com permissão de leitura ou edição.</p>
             </article>
             <article class="feature">
-              <h3 data-i18n="featureSixTitle">Tudo em um so lugar</h3>
-              <p data-i18n="featureSixText">Salve logins, sites, observacoes importantes e dados de acesso sem espalhar informacoes em planilhas ou mensagens.</p>
+              <h3 data-i18n="featureSixTitle">Tudo em um só lugar</h3>
+              <p data-i18n="featureSixText">Salve logins, sites, observações importantes e dados de acesso sem espalhar informações em planilhas ou mensagens.</p>
             </article>
           </div>
         </div>
@@ -702,16 +740,16 @@
       <section id="security">
         <div class="shell security-band">
           <div class="section-title">
-            <h2 data-i18n="securityTitle">A senha mestra fica com voce.</h2>
+            <h2 data-i18n="securityTitle">A senha mestra fica com você.</h2>
             <p data-i18n="securityText">
-              Password Keeper foi feito para que suas senhas nao fiquem expostas. Mesmo quando voce sincroniza, o arquivo continua protegido.
+              Password Keeper foi feito para que suas senhas não fiquem expostas. Mesmo quando você sincroniza, o arquivo continua protegido.
             </p>
           </div>
           <ul class="security-list">
-            <li><strong data-i18n="securityOneStrong">Senha mestra:</strong> <span data-i18n="securityOneText">e a chave principal do seu cofre. Sem ela, o arquivo nao abre.</span></li>
-            <li><strong data-i18n="securityTwoStrong">Bloqueio automatico:</strong> <span data-i18n="securityTwoText">se voce ficar um tempo sem usar, o cofre fecha sozinho.</span></li>
-            <li><strong data-i18n="securityThreeStrong">Sincronizacao protegida:</strong> <span data-i18n="securityThreeText">o Google Drive guarda apenas o arquivo criptografado, nao suas senhas legiveis.</span></li>
-            <li><strong data-i18n="securityFourStrong">Compartilhamento controlado:</strong> <span data-i18n="securityFourText">voce escolhe o que compartilhar e se a outra pessoa pode apenas ver ou tambem editar.</span></li>
+            <li><strong data-i18n="securityOneStrong">Senha mestra:</strong> <span data-i18n="securityOneText">e a chave principal do seu cofre. Sem ela, o arquivo não abre.</span></li>
+            <li><strong data-i18n="securityTwoStrong">Bloqueio automático:</strong> <span data-i18n="securityTwoText">se você ficar um tempo sem usar, o cofre fecha sozinho.</span></li>
+            <li><strong data-i18n="securityThreeStrong">Sincronização protegida:</strong> <span data-i18n="securityThreeText">o Google Drive guarda apenas o arquivo criptografado, não suas senhas legíveis.</span></li>
+            <li><strong data-i18n="securityFourStrong">Compartilhamento controlado:</strong> <span data-i18n="securityFourText">você escolhe o que compartilhar e se a outra pessoa pode apenas ver ou também editar.</span></li>
           </ul>
         </div>
       </section>
@@ -719,15 +757,15 @@
       <section id="architecture">
         <div class="shell">
           <div class="section-title">
-            <h2 data-i18n="architectureTitle">Como funciona na pratica.</h2>
+            <h2 data-i18n="architectureTitle">Como funciona na prática.</h2>
             <p data-i18n="architectureText">
-              Voce nao precisa entender criptografia para usar. O fluxo foi pensado para ser direto desde o primeiro cofre.
+              Você não precisa entender criptografia para usar. O fluxo foi pensado para ser direto desde o primeiro cofre.
             </p>
           </div>
           <div class="architecture">
             <article class="architecture-step">
               <h3 data-i18n="archOneTitle">1. Crie sua senha mestra</h3>
-              <p data-i18n="archOneText">Ela protege tudo. Escolha uma senha forte, memoravel e diferente das suas outras senhas.</p>
+              <p data-i18n="archOneText">Ela protege tudo. Escolha uma senha forte, memorável e diferente das suas outras senhas.</p>
             </article>
             <article class="architecture-step">
               <h3 data-i18n="archTwoTitle">2. Cadastre suas contas</h3>
@@ -746,14 +784,14 @@
           <div class="section-title">
             <h2 data-i18n="downloadsTitle">Baixe para sua plataforma.</h2>
             <p data-i18n="downloadsText">
-              Escolha o sistema onde voce quer instalar. Se estiver em duvida no Windows, use o EXE. No Linux, AppImage costuma ser a opcao mais simples.
+              Escolha o sistema onde você quer instalar. Se estiver em dúvida no Windows, use o EXE. No Linux, AppImage costuma ser a opção mais simples.
             </p>
           </div>
           <div class="download-grid">
             <article class="download-card">
               <div>
                 <h3>Windows</h3>
-                <p data-i18n="windowsText">Instalador classico para maquinas x64.</p>
+                <p data-i18n="windowsText">Instalador clássico para máquinas x64.</p>
               </div>
               <div class="download-links">
                 <a class="download-link" href="./download.html?file=windows-exe">EXE</a>
@@ -784,7 +822,7 @@
             <article class="download-card">
               <div>
                 <h3>Android</h3>
-                <p data-i18n="androidText">APK assinado para instalacao manual.</p>
+                <p data-i18n="androidText">APK assinado para instalação manual.</p>
               </div>
               <div class="download-links">
                 <a class="download-link" href="./download.html?file=android-apk">APK</a>
@@ -799,9 +837,23 @@
             <article class="download-card">
               <div>
                 <h3 data-i18n="installTitle">Primeiro uso</h3>
-                <p data-i18n="installText">Instale, crie uma senha mestra e comece adicionando suas contas mais importantes. A sincronizacao pelo Drive pode ser ativada depois.</p>
+                <p data-i18n="installText">Instale, crie uma senha mestra e comece adicionando suas contas mais importantes. A sincronização pelo Drive pode ser ativada depois.</p>
               </div>
             </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="duvidas">
+        <div class="shell">
+          <div class="section-title"><h2 data-i18n="faqTitle">Antes de baixar, tire suas dúvidas.</h2></div>
+          <div class="faq-list">
+            <details><summary data-i18n="faqLocalQ">Preciso conectar uma conta Google?</summary><p data-i18n="faqLocalA">Não. Você pode manter seu cofre local no dispositivo. O Google Drive é uma opção para sincronizar o arquivo criptografado.</p></details>
+            <details><summary data-i18n="faqMasterQ">O que acontece se eu esquecer a senha mestra?</summary><p data-i18n="faqMasterA">Ela é necessária para desbloquear seu cofre. Não conte com uma recuperação por e-mail. Escolha uma senha mestra forte e mantenha uma cópia de emergência em um lugar protegido.</p></details>
+            <details><summary data-i18n="faqDataQ">Onde ficam minhas senhas?</summary><p data-i18n="faqDataA">O cofre é salvo em um arquivo .keep criptografado. Ele pode ficar no seu dispositivo ou, se você conectar o Google Drive, ser sincronizado por esse serviço. Faça cópias de segurança do arquivo.</p></details>
+            <details><summary data-i18n="faqPlatformsQ">Funciona no meu computador e no Android?</summary><p data-i18n="faqPlatformsA">Há instaladores para Windows x64, macOS Intel e Apple Silicon, Linux e Android. Não há instalador para iPhone nesta página. No Android, o download é um APK para instalação manual.</p></details>
+            <details><summary data-i18n="faqInstallQ">E se aparecer um aviso durante a instalação?</summary><p data-i18n="faqInstallA">Windows e macOS podem mostrar avisos de assinatura ou notarização. No Android, a instalação de APK exige autorização para a fonte escolhida. Confira a origem do arquivo e a release oficial antes de prosseguir; se tiver dúvida, peça ajuda.</p></details>
+            <details><summary data-i18n="faqTrustQ">Como conhecer o projeto e pedir ajuda?</summary><p><span data-i18n="faqTrustA">Consulte o código e a documentação pública. Para relatar uma dificuldade, informe o sistema e a versão, sem enviar senhas ou seu arquivo de cofre.</span> <a class="text-link" href="https://github.com/Praesens-tech/passwordKeeper" data-i18n="sourceCta">Ver o projeto</a> · <a class="text-link" href="https://github.com/Praesens-tech/passwordKeeper/issues/new" data-i18n="helpCta">Relatar uma dificuldade</a></p></details>
           </div>
         </div>
       </section>
@@ -809,17 +861,17 @@
       <section id="versions">
         <div class="shell">
           <div class="section-title">
-            <h2 data-i18n="historyTitle">Historico de versoes</h2>
+            <h2 data-i18n="historyTitle">Histórico de versões</h2>
             <p data-i18n="historyText">
-              Acompanhe as melhorias principais disponiveis para download.
+              Acompanhe as melhorias principais disponíveis para download.
             </p>
           </div>
           <aside class="version-history" aria-labelledby="version-history-title">
-            <h3 id="version-history-title" data-i18n="historyLatest">Versao atual</h3>
+            <h3 id="version-history-title" data-i18n="historyLatest">Versão atual</h3>
             <ul class="version-list">
               <li>
                 <strong data-current-version>v0.2.9</strong>
-                <span data-i18n="historyCurrent">Downloads para Windows, macOS, Linux e Android, com pagina simples para usuarios finais.</span>
+                <span data-i18n="historyCurrent">Downloads para Windows, macOS, Linux e Android, com página simples para usuários finais.</span>
               </li>
             </ul>
           </aside>
@@ -856,57 +908,85 @@
           <img src="./assets/praesens_logo_principal.svg" alt="Praesens.tech" width="180" height="48" />
         </picture>
         <span data-i18n="footerText">Cofre de senhas criptografado para desktop e Android.</span>
+        <a class="text-link" href="./como-organizar-senhas.html" data-i18n="guideCta">Guia para começar</a>
+        <a class="text-link" href="https://github.com/Praesens-tech/passwordKeeper/issues/new" data-i18n="helpCta">Relatar uma dificuldade</a>
+        <button class="language-toggle" type="button" id="sharePage" data-i18n="shareCta">Compartilhar página</button>
+        <span id="shareStatus" role="status" aria-live="polite"></span>
       </div>
     </footer>
 
     <script>
       const copy = {
         pt: {
+          demoTitle: "Veja o Password Keeper por dentro.",
+          demoText: "Capturas da interface real com contas fictícias. Conheça a organização e a busca antes de instalar.",
+          demoGroups: "Separe seus acessos por grupos, como Pessoal e Trabalho. Marque os mais usados como favoritos.",
+          demoSearch: "Digite o nome da conta na busca para encontrar sua credencial. As senhas aparecem ocultas na lista.",
+          demoCta: "Experimentar no meu dispositivo",
+          guideCta: "Guia para começar",
+          faqTitle: "Antes de baixar, tire suas dúvidas.",
+          faqLocalQ: "Preciso conectar uma conta Google?",
+          faqLocalA: "Não. Você pode manter seu cofre local no dispositivo. O Google Drive é uma opção para sincronizar o arquivo criptografado.",
+          faqMasterQ: "O que acontece se eu esquecer a senha mestra?",
+          faqMasterA: "Ela é necessária para desbloquear seu cofre. Não conte com uma recuperação por e-mail. Escolha uma senha mestra forte e mantenha uma cópia de emergência em um lugar protegido.",
+          faqDataQ: "Onde ficam minhas senhas?",
+          faqDataA: "O cofre é salvo em um arquivo .keep criptografado. Ele pode ficar no seu dispositivo ou, se você conectar o Google Drive, ser sincronizado por esse serviço. Faça cópias de segurança do arquivo.",
+          faqPlatformsQ: "Funciona no meu computador e no Android?",
+          faqPlatformsA: "Há instaladores para Windows x64, macOS Intel e Apple Silicon, Linux e Android. Não há instalador para iPhone nesta página. No Android, o download é um APK para instalação manual.",
+          faqInstallQ: "E se aparecer um aviso durante a instalação?",
+          faqInstallA: "Windows e macOS podem mostrar avisos de assinatura ou notarização. No Android, a instalação de APK exige autorização para a fonte escolhida. Confira a origem do arquivo e a release oficial antes de prosseguir; se tiver dúvida, peça ajuda.",
+          faqTrustQ: "Como conhecer o projeto e pedir ajuda?",
+          faqTrustA: "Consulte o código e a documentação pública. Para relatar uma dificuldade, informe o sistema e a versão, sem enviar senhas ou seu arquivo de cofre.",
+          sourceCta: "Ver o projeto",
+          helpCta: "Relatar uma dificuldade",
+          shareCta: "Compartilhar página",
+          shareCopied: "Link copiado. Envie para quem quer organizar as senhas.",
+          shareFallback: "Copie o endereço na barra do navegador.",
           navFeatures: "Recursos",
-          navSecurity: "Seguranca",
+          navSecurity: "Segurança",
           navDownloads: "Downloads",
-          navVersions: "Versoes",
+          navVersions: "Versões",
           navCta: "Baixar",
-          heroTitle: "Password Keeper",
-          heroText: "Um cofre criptografado para guardar, sincronizar e compartilhar credenciais sem entregar sua senha mestra.",
+          heroTitle: "Password Keeper: suas senhas organizadas.",
+          heroText: "Guarde seus acessos em um cofre criptografado no seu dispositivo. Organize por grupos e encontre suas contas pela busca. Para Windows, Linux, macOS e Android.",
           heroPrimary: "Baixar agora",
-          heroSecondary: "Conhecer recursos",
+          heroSecondary: "Ver o aplicativo",
           proofOneTitle: "No seu aparelho",
-          proofOneText: "Protecao antes de salvar ou sincronizar.",
+          proofOneText: "Proteção antes de salvar ou sincronizar.",
           proofTwoTitle: "4 sistemas",
           proofTwoText: "Linux, Windows, macOS e Android.",
           proofThreeTitle: "Google Drive",
-          proofThreeText: "Sincronizacao via Google Drive.",
+          proofThreeText: "Sincronização via Google Drive.",
           proofFourTitle: "Compartilhe",
           proofFourText: "Acesso por senha separada.",
           featuresTitle: "Feito para credenciais reais.",
-          featuresText: "Guarde contas, notas, URLs, grupos e favoritos em um app simples, rapido e feito para o dia a dia.",
+          featuresText: "Guarde contas, notas, URLs, grupos e favoritos em um app simples, rápido e feito para o dia a dia.",
           featureOneTitle: "Cofre criptografado",
-          featureOneText: "Suas senhas ficam trancadas por uma senha mestra que so voce conhece.",
-          featureTwoTitle: "Organizacao clara",
-          featureTwoText: "Use grupos, favoritos, busca, icones e visualizacoes em grade ou lista para encontrar tudo rapido.",
+          featureOneText: "Suas senhas ficam trancadas por uma senha mestra que só você conhece.",
+          featureTwoTitle: "Organização clara",
+          featureTwoText: "Use grupos, favoritos, busca, ícones e visualizações em grade ou lista para encontrar tudo rápido.",
           featureThreeTitle: "Senhas fortes",
-          featureThreeText: "Gere senhas com letras, numeros e simbolos, com indicador de forca antes de salvar.",
+          featureThreeText: "Gere senhas com letras, números e símbolos, com indicador de força antes de salvar.",
           featureFourTitle: "Google Drive opcional",
           featureFourText: "Mantenha tudo local ou sincronize o arquivo criptografado entre seus dispositivos.",
-          featureFiveTitle: "Colaboracao segura",
-          featureFiveText: "Compartilhe um cofre, grupo ou entrada com permissao de leitura ou edicao.",
-          featureSixTitle: "Tudo em um so lugar",
-          featureSixText: "Salve logins, sites, observacoes importantes e dados de acesso sem espalhar informacoes em planilhas ou mensagens.",
-          securityTitle: "A senha mestra fica com voce.",
-          securityText: "Password Keeper foi feito para que suas senhas nao fiquem expostas. Mesmo quando voce sincroniza, o arquivo continua protegido.",
+          featureFiveTitle: "Colaboração segura",
+          featureFiveText: "Compartilhe um cofre, grupo ou entrada com permissão de leitura ou edição.",
+          featureSixTitle: "Tudo em um só lugar",
+          featureSixText: "Salve logins, sites, observações importantes e dados de acesso sem espalhar informações em planilhas ou mensagens.",
+          securityTitle: "A senha mestra fica com você.",
+          securityText: "Password Keeper foi feito para que suas senhas não fiquem expostas. Mesmo quando você sincroniza, o arquivo continua protegido.",
           securityOneStrong: "Senha mestra:",
-          securityOneText: "e a chave principal do seu cofre. Sem ela, o arquivo nao abre.",
-          securityTwoStrong: "Bloqueio automatico:",
-          securityTwoText: "se voce ficar um tempo sem usar, o cofre fecha sozinho.",
-          securityThreeStrong: "Sincronizacao protegida:",
-          securityThreeText: "o Google Drive guarda apenas o arquivo criptografado, nao suas senhas legiveis.",
+          securityOneText: "e a chave principal do seu cofre. Sem ela, o arquivo não abre.",
+          securityTwoStrong: "Bloqueio automático:",
+          securityTwoText: "se você ficar um tempo sem usar, o cofre fecha sozinho.",
+          securityThreeStrong: "Sincronização protegida:",
+          securityThreeText: "o Google Drive guarda apenas o arquivo criptografado, não suas senhas legíveis.",
           securityFourStrong: "Compartilhamento controlado:",
-          securityFourText: "voce escolhe o que compartilhar e se a outra pessoa pode apenas ver ou tambem editar.",
-          architectureTitle: "Como funciona na pratica.",
-          architectureText: "Voce nao precisa entender criptografia para usar. O fluxo foi pensado para ser direto desde o primeiro cofre.",
+          securityFourText: "você escolhe o que compartilhar e se a outra pessoa pode apenas ver ou também editar.",
+          architectureTitle: "Como funciona na prática.",
+          architectureText: "Você não precisa entender criptografia para usar. O fluxo foi pensado para ser direto desde o primeiro cofre.",
           archOneTitle: "1. Crie sua senha mestra",
-          archOneText: "Ela protege tudo. Escolha uma senha forte, memoravel e diferente das suas outras senhas.",
+          archOneText: "Ela protege tudo. Escolha uma senha forte, memorável e diferente das suas outras senhas.",
           archTwoTitle: "2. Cadastre suas contas",
           archTwoText: "Organize por grupos, favorite os acessos importantes e encontre tudo pela busca.",
           archThreeTitle: "3. Use em outros dispositivos",
@@ -916,35 +996,59 @@
           downloadCountSource: "Total de todas as versões públicas · Fonte: GitHub",
           downloadCountError: "Contagem indisponível no momento. Tente novamente mais tarde.",
           downloadsTitle: "Baixe para sua plataforma.",
-          downloadsText: "Escolha o sistema onde voce quer instalar. Se estiver em duvida no Windows, use o EXE. No Linux, AppImage costuma ser a opcao mais simples.",
-          windowsText: "Instalador classico para maquinas x64.",
+          downloadsText: "Escolha o sistema onde você quer instalar. Se estiver em dúvida no Windows, use o EXE. No Linux, AppImage costuma ser a opção mais simples.",
+          windowsText: "Instalador clássico para máquinas x64.",
           macText: "Pacotes DMG para Apple Silicon e Intel.",
           linuxText: "Escolha AppImage, Debian/Ubuntu ou RPM.",
-          androidText: "APK assinado para instalacao manual.",
+          androidText: "APK assinado para instalação manual.",
           chooseTitle: "Qual arquivo escolher?",
           chooseText: "Windows: use EXE. macOS: escolha Apple Silicon para Macs novos ou Intel para Macs antigos. Linux: comece pelo AppImage.",
           installTitle: "Primeiro uso",
-          installText: "Instale, crie uma senha mestra e comece adicionando suas contas mais importantes. A sincronizacao pelo Drive pode ser ativada depois.",
-          historyTitle: "Historico de versoes",
-          historyText: "Acompanhe as melhorias principais disponiveis para download.",
-          historyLatest: "Versao atual",
-          historyCurrent: "Downloads para Windows, macOS, Linux e Android, com pagina simples para usuarios finais.",
-          historyPublished: "Versao publicada para Windows, macOS, Linux e Android.",
+          installText: "Instale, crie uma senha mestra e comece adicionando suas contas mais importantes. A sincronização pelo Drive pode ser ativada depois.",
+          historyTitle: "Histórico de versões",
+          historyText: "Acompanhe as melhorias principais disponíveis para download.",
+          historyLatest: "Versão atual",
+          historyCurrent: "Downloads para Windows, macOS, Linux e Android, com página simples para usuários finais.",
+          historyPublished: "Versão publicada para Windows, macOS, Linux e Android.",
           ctaTitle: "Leve seu cofre para onde trabalha.",
           ctaText: "Comece local, conecte o Drive quando precisar e compartilhe apenas o que faz sentido.",
           ctaButton: "Escolher download",
           footerText: "Cofre de senhas criptografado para desktop e Android."
         },
         en: {
+          demoTitle: "See inside Password Keeper.",
+          demoText: "Real interface screenshots with fictional accounts. Explore groups and search before installing.",
+          demoGroups: "Organize logins into groups such as Personal and Work. Mark frequently used accounts as favorites.",
+          demoSearch: "Search for an account by name to find its credentials. Passwords are hidden in the list.",
+          demoCta: "Try it on my device",
+          guideCta: "Getting started guide (Portuguese)",
+          faqTitle: "Your questions, before you download.",
+          faqLocalQ: "Do I need to connect a Google account?",
+          faqLocalA: "No. You can keep your vault locally on your device. Google Drive is optional for syncing the encrypted file.",
+          faqMasterQ: "What if I forget the master password?",
+          faqMasterA: "It is required to unlock your vault. Do not rely on email recovery. Choose a strong master password and keep an emergency copy in a protected place.",
+          faqDataQ: "Where are my passwords stored?",
+          faqDataA: "The vault is stored in an encrypted .keep file. It can stay on your device or sync through Google Drive if you connect it. Keep backups of the file.",
+          faqPlatformsQ: "Does it work on my computer and Android?",
+          faqPlatformsA: "Installers are available for Windows x64, Intel and Apple Silicon Macs, Linux, and Android. This page has no iPhone installer. Android uses an APK for manual installation.",
+          faqInstallQ: "What if an installation warning appears?",
+          faqInstallA: "Windows and macOS may show signing or notarization warnings. Android APK installation requires permission for the selected source. Check the file origin and official release before proceeding; ask for help if unsure.",
+          faqTrustQ: "How can I learn about the project or get help?",
+          faqTrustA: "Read the public source and documentation. When reporting a problem, include your system and version, never your passwords or vault file.",
+          sourceCta: "View the project",
+          helpCta: "Report a problem",
+          shareCta: "Share this page",
+          shareCopied: "Link copied. Send it to someone who wants to organize passwords.",
+          shareFallback: "Copy the address from your browser bar.",
           navFeatures: "Features",
           navSecurity: "Security",
           navDownloads: "Downloads",
           navVersions: "Versions",
           navCta: "Download",
-          heroTitle: "Password Keeper",
-          heroText: "An encrypted vault for storing, syncing, and sharing credentials without giving away your master password.",
+          heroTitle: "Password Keeper: your passwords, organized.",
+          heroText: "Keep your logins in an encrypted vault on your device. Organize them into groups and find accounts with search. For Windows, Linux, macOS, and Android.",
           heroPrimary: "Download now",
-          heroSecondary: "Explore features",
+          heroSecondary: "See the app",
           proofOneTitle: "On your device",
           proofOneText: "Protected before saving or syncing.",
           proofTwoTitle: "4 systems",
@@ -968,7 +1072,7 @@
           featureSixTitle: "Everything in one place",
           featureSixText: "Save logins, sites, important notes, and access details without spreading information across spreadsheets or messages.",
           securityTitle: "The master password stays with you.",
-          securityText: "Password Keeper is designed so your passwords stay protected. Even when you sync, the file remains encrypted.",
+          securityText: "Password Keeper is designed só your passwords stay protected. Even when you sync, the file remains encrypted.",
           securityOneStrong: "Master password:",
           securityOneText: "it is the main key to your vault. Without it, the file does not open.",
           securityTwoStrong: "Auto-lock:",
@@ -1011,8 +1115,8 @@
         }
       };
 
-      const browserLanguage = (navigator.language || "en").toLowerCase();
-      let currentLanguage = /^pt(?:-|$)/.test(browserLanguage) ? "pt" : "en";
+      // Keep the Brazilian page stable for visitors and crawlers; English is opt-in.
+      let currentLanguage = "pt";
       const toggle = document.getElementById("languageToggle");
 
       let downloadTotal = null;
@@ -1068,9 +1172,20 @@
         renderDownloadCount();
         toggle.textContent = language === "pt" ? "EN" : "PT";
         document.title = language === "pt"
-          ? "Password Keeper - Cofre de senhas criptografado"
+          ? "Password Keeper | Gerenciador de senhas para PC e Android"
           : "Password Keeper - Encrypted password vault";
       }
+
+      document.getElementById("sharePage").addEventListener("click", async () => {
+        const url = "https://praesens-tech.github.io/passwordKeeper/";
+        try {
+          if (navigator.share) { await navigator.share({ title: "Password Keeper", url }); return; }
+          await navigator.clipboard.writeText(url);
+          document.getElementById("shareStatus").textContent = copy[currentLanguage].shareCopied;
+        } catch (error) {
+          if (error.name !== "AbortError") document.getElementById("shareStatus").textContent = copy[currentLanguage].shareFallback;
+        }
+      });
 
       toggle.addEventListener("click", () => {
         applyLanguage(currentLanguage === "pt" ? "en" : "pt");
