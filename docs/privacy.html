@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Política de privacidade — Password Keeper</title>
+    <meta name="description" content="Como o Password Keeper acessa, usa, armazena e compartilha dados, incluindo os dados do Google Drive." />
+    <link rel="canonical" href="https://praesens-tech.github.io/passwordKeeper/privacy.html" />
+    <link rel="icon" type="image/svg+xml" href="./assets/praesens_simbolo.svg" />
+    <style>
+      :root { color-scheme: light dark; }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: #faf5f2; color: #342019; font: 1rem/1.7 system-ui, sans-serif; }
+      main { max-width: 840px; margin: auto; padding: 32px 20px 64px; }
+      h1, h2 { line-height: 1.25; }
+      h1 { font-size: clamp(1.8rem, 5vw, 2.6rem); }
+      h2 { margin-top: 2rem; font-size: 1.3rem; }
+      a { color: #903811; overflow-wrap: anywhere; }
+      .date { color: #68574f; }
+      @media (prefers-color-scheme: dark) {
+        body { background: #17120f; color: #f5ece6; }
+        a { color: #ffb18b; }
+        .date { color: #cbb8ad; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <a href="./">← Password Keeper</a>
+      <h1>Política de privacidade</h1>
+      <p class="date">Atualizada em 20 de outubro de 2026.</p>
+      <p>Esta política descreve o tratamento de dados pelo Password Keeper, aplicativo de cofre de senhas para desktop e Android mantido no projeto Praesens-tech/passwordKeeper. Contato do desenvolvedor: <a href="mailto:mpblima@gmail.com">mpblima@gmail.com</a>.</p>
+
+      <h2>1. Cofre e armazenamento local</h2>
+      <p>As informações inseridas no cofre são processadas no dispositivo. O aplicativo criptografa o conteúdo com AES-256-GCM antes de gravá-lo em arquivos <code>.keep</code> ou enviá-lo ao Google Drive. A senha mestra é usada no dispositivo para derivar a chave de criptografia e não é enviada ao Google ou ao desenvolvedor. O conteúdo descriptografado permanece na memória durante o uso do cofre.</p>
+      <p>O dispositivo também armazena configurações, referências dos arquivos, informações da conta conectada e tokens OAuth usados para acessar o Drive. Os tokens são persistidos no armazenamento de configuração do aplicativo, separados do cofre, e não no localStorage do WebView. Esses tokens permitem acesso às APIs autorizadas e devem ser protegidos junto com o dispositivo.</p>
+
+      <h2>2. Dados do Google e finalidade do acesso</h2>
+      <p>A conexão ao Google é opcional. Ao conectar uma conta, o aplicativo usa o endereço de e-mail e os dados de perfil disponibilizados pela API para identificar a conta conectada e a autoria dos compartilhamentos. Usa tokens de acesso e de renovação para autenticar as solicitações e manter a sincronização autorizada.</p>
+      <p>A versão atual solicita o escopo <code>https://www.googleapis.com/auth/drive</code>, que tecnicamente permite acesso amplo aos arquivos do Drive. No funcionamento do Password Keeper, esse acesso é usado para localizar cofres <code>.keep</code> existentes e compartilhados, ler e atualizar cofres criptografados, criar arquivos de colaboração, gerenciar as permissões solicitadas pelo usuário, excluir arquivos quando solicitado e detectar alterações para sincronização. O aplicativo também solicita <code>https://www.googleapis.com/auth/userinfo.email</code> para identificar a conta.</p>
+      <p>As solicitações às APIs do Google são feitas pelo aplicativo no dispositivo. O projeto não opera um servidor próprio para receber ou armazenar o conteúdo do cofre ou os tokens OAuth. O Google recebe as solicitações à sua API e armazena os arquivos criptografados, nomes, metadados e permissões dos arquivos no Drive da conta correspondente.</p>
+
+      <h2>3. Compartilhamento</h2>
+      <p>Ao solicitar um compartilhamento, o usuário autoriza o envio ao Google do e-mail do destinatário e da permissão escolhida. Um arquivo de colaboração separado é disponibilizado no Drive. A senha mestra do cofre principal não é compartilhada. O destinatário que possui a permissão e a senha do compartilhamento pode acessar o conteúdo compartilhado conforme o papel atribuído.</p>
+      <p>O desenvolvedor não recebe automaticamente acesso aos cofres. O uso dos dados obtidos das APIs do Google é limitado às funcionalidades de cofre, identidade, sincronização e colaboração descritas nesta política; esses dados não são vendidos, usados para publicidade personalizada ou para treinamento de modelos de inteligência artificial de uso geral.</p>
+
+      <h2>4. Retenção, desconexão e exclusão</h2>
+      <p>Os arquivos locais e no Drive permanecem nos locais escolhidos até serem removidos pelo usuário. Desconectar a conta no aplicativo remove a referência local ao token e às informações da conta, mas não exclui automaticamente arquivos locais, backups ou arquivos do Drive, nem revoga por si só a autorização no Google.</p>
+      <p>Para revogar o acesso, acesse as <a href="https://myaccount.google.com/connections">conexões da sua Conta do Google</a> e remova o acesso do Password Keeper. Para excluir os dados, remova os arquivos <code>.keep</code> e os arquivos <code>pk-collab-*.keep</code> que desejar, seus backups e os dados locais do aplicativo. No Drive, observe também a lixeira e as regras de retenção da sua conta. Excluir uma cópia não apaga cópias que destinatários já tenham exportado ou guardado.</p>
+
+      <h2>5. Atualizações e site</h2>
+      <p>O aplicativo pode consultar releases no GitHub para verificar atualizações e abrir links no navegador do sistema. O GitHub processa essas conexões conforme a sua <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">política de privacidade</a>; o conteúdo do cofre não faz parte da consulta de atualização.</p>
+      <p>Este site é hospedado no GitHub Pages e consulta contagens públicas de downloads das releases. O provedor de hospedagem e as APIs consultadas podem receber informações técnicas da conexão, como o endereço IP. O site não solicita o conteúdo do cofre ou a senha mestra.</p>
+
+      <h2>6. Uso limitado dos dados do Google</h2>
+      <p>O uso e a transferência de informações recebidas das APIs do Google pelo Password Keeper seguem a <a href="https://developers.google.com/terms/api-services-user-data-policy">Política de Dados do Usuário dos Serviços de API do Google</a>, incluindo os requisitos de Uso Limitado (Limited Use).</p>
+
+      <h2>7. Contato e alterações</h2>
+      <p>Para dúvidas sobre os dados tratados pelo aplicativo ou solicitações de privacidade, entre em contato pelo e-mail <a href="mailto:mpblima@gmail.com">mpblima@gmail.com</a>. Não envie senhas, tokens OAuth ou o conteúdo do seu cofre no pedido. Alterações nesta política serão publicadas nesta página com a data de atualização.</p>
+    </main>
+  </body>
+</html>
