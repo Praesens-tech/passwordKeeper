@@ -256,6 +256,10 @@ jobs:
 
           echo "APK de entrada: $APK"
 
+          # Native Rust calls are invisible to R8: verify the optimized DEX,
+          # not just Kotlin compilation, before publishing a release.
+          python3 scripts/verify-android-jni.py "$APK" "$BUILD_TOOLS/dexdump"
+
           VERSION=$(echo "${{ github.ref_name }}" | tr -d 'v')
           FINAL="$GITHUB_WORKSPACE/PasswordKeeper-${VERSION}-android.apk"
 

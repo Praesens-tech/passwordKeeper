@@ -809,7 +809,7 @@ function ErrorMsg({ message }: { message: string }) {
   return (
     <div className="flex items-start gap-2 p-3 bg-vault-danger/10 border border-vault-danger/30 rounded-xl">
       <AlertCircle size={15} className="text-vault-danger mt-0.5 flex-shrink-0" />
-      <p className="text-sm text-vault-danger">{message}</p>
+      <p className="min-w-0 break-words [overflow-wrap:anywhere] text-sm text-vault-danger">{message}</p>
     </div>
   );
 }

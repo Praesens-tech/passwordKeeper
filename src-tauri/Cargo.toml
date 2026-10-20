@@ -1,6 +1,6 @@
 [package]
 name = "password-keeper"
-version = "0.2.10"
+version = "0.2.11"
 description = "Password Keeper - Secure Password Vault"
 authors = ["Marcos Paulo Blima"]
 license = "ISC"
