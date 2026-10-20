@@ -139,6 +139,16 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
+      - name: Validar configuração OAuth Android
+        shell: bash
+        env:
+          VITE_GOOGLE_ANDROID_CLIENT_ID: ${{ secrets.VITE_GOOGLE_ANDROID_CLIENT_ID }}
+        run: |
+          if [[ ! "$VITE_GOOGLE_ANDROID_CLIENT_ID" =~ ^[0-9]+-[a-zA-Z0-9]+\.apps\.googleusercontent\.com$ ]]; then
+            echo "::error::Configure o secret VITE_GOOGLE_ANDROID_CLIENT_ID com o cliente OAuth Android antes de gerar o APK."
+            exit 1
+          fi
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
