@@ -5,8 +5,8 @@ Status: material preparado; submissão e aprovação pelo Google pendentes.
 ## Dados para o Google Auth Platform
 
 - Nome: Password Keeper (usar o mesmo nome nos clientes e na tela de consentimento).
-- Homepage: https://praesens-tech.github.io/passwordKeeper/
-- Política de privacidade: https://praesens-tech.github.io/passwordKeeper/privacy.html
+- Homepage: https://passwordkeeper.praesens.tech/
+- Política de privacidade: https://passwordkeeper.praesens.tech/privacy.html
 - Contato do desenvolvedor exibido no aviso atual: mpblima@gmail.com.
 - Código-fonte: https://github.com/Praesens-tech/passwordKeeper
 - Plataformas: desktop (Windows, Linux, macOS) e Android.

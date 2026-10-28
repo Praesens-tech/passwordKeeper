@@ -14,20 +14,20 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Password Keeper | Suas senhas organizadas" />
     <meta name="twitter:description" content="Conheça a interface real e baixe o cofre de senhas para PC e Android." />
-    <meta name="twitter:image" content="https://praesens-tech.github.io/passwordKeeper/assets/password-keeper-hero.png" />
+    <meta name="twitter:image" content="https://passwordkeeper.praesens.tech/assets/password-keeper-hero.png" />
     <meta property="og:image:alt" content="Apresentação do Password Keeper para computador e Android" />
     <meta
       property="og:description"
       content="Gerenciador de senhas com cofre local criptografado, grupos, busca e sincronização opcional pelo Google Drive."
     />
     <meta property="og:type" content="website" />
-    <link rel="canonical" href="https://praesens-tech.github.io/passwordKeeper/" />
-    <meta property="og:url" content="https://praesens-tech.github.io/passwordKeeper/" />
+    <link rel="canonical" href="https://passwordkeeper.praesens.tech/" />
+    <meta property="og:url" content="https://passwordkeeper.praesens.tech/" />
     <meta property="og:site_name" content="Password Keeper | Praesens.tech" />
-    <meta property="og:image" content="https://praesens-tech.github.io/passwordKeeper/assets/password-keeper-hero.png" />
+    <meta property="og:image" content="https://passwordkeeper.praesens.tech/assets/password-keeper-hero.png" />
     <meta name="theme-color" content="#D85A30" />
     <link rel="icon" type="image/svg+xml" href="./assets/praesens_simbolo.svg" />
-    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "Password Keeper", "url": "https://praesens-tech.github.io/passwordKeeper/", "applicationCategory": "SecurityApplication", "operatingSystem": "Windows, macOS, Linux, Android", "description": "Gerenciador de senhas com cofre local criptografado, grupos, favoritos, busca e sincronização opcional pelo Google Drive.", "image": "https://praesens-tech.github.io/passwordKeeper/assets/interface-organizacao.png", "publisher": {"@type": "Organization", "name": "Praesens.tech"}, "downloadUrl": "https://praesens-tech.github.io/passwordKeeper/#downloads", "featureList": ["Cofre local criptografado", "Grupos e favoritos", "Busca de credenciais", "Gerador de senhas", "Sincronização opcional pelo Google Drive"]}</script>
+    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "Password Keeper", "url": "https://passwordkeeper.praesens.tech/", "applicationCategory": "SecurityApplication", "operatingSystem": "Windows, macOS, Linux, Android", "description": "Gerenciador de senhas com cofre local criptografado, grupos, favoritos, busca e sincronização opcional pelo Google Drive.", "image": "https://passwordkeeper.praesens.tech/assets/interface-organizacao.png", "publisher": {"@type": "Organization", "name": "Praesens.tech"}, "downloadUrl": "https://passwordkeeper.praesens.tech/#downloads", "featureList": ["Cofre local criptografado", "Grupos e favoritos", "Busca de credenciais", "Gerador de senhas", "Sincronização opcional pelo Google Drive"]}</script>
     <link rel="sitemap" type="application/xml" href="./sitemap.xml" />
     <style>
       :root {
@@ -1186,7 +1186,7 @@
       }
 
       document.getElementById("sharePage").addEventListener("click", async () => {
-        const url = "https://praesens-tech.github.io/passwordKeeper/";
+        const url = "https://passwordkeeper.praesens.tech/";
         try {
           if (navigator.share) { await navigator.share({ title: "Password Keeper", url }); return; }
           await navigator.clipboard.writeText(url);

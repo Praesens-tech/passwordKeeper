@@ -60,7 +60,7 @@ A pagina promocional para GitHub Pages fica em:
 Quando o GitHub Pages estiver apontando para a pasta `docs`, a URL esperada sera:
 
 ```text
-https://praesens-tech.github.io/passwordKeeper/
+https://passwordkeeper.praesens.tech/
 ```
 
 A pagina tem portugues como idioma padrao e alternancia para ingles.
