@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import { FolderOpen, Plus, Save, LogOut, Info, HardDrive, Cloud, Share2, RefreshCw, Key, PanelLeft, Power, Menu } from "lucide-react";
+import { FolderOpen, Plus, Save, LogOut, Info, HardDrive, Cloud, Share2, RefreshCw, Key, PanelLeft, Power, Menu, Pencil } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { useVaultStore } from "../store/vaultStore";
+import { getMobileVaultPath, pickSavePath } from "../services/localFile";
 import { usePlatform } from "../hooks/usePlatform";
 import { AboutScreen } from "./AboutScreen";
 import { GoogleDriveModal } from "./GoogleDriveModal";
@@ -16,7 +17,7 @@ interface AppMenuBarProps {
 }
 
 export function AppMenuBar({ onForceSync, isForceSyncing }: AppMenuBarProps) {
-  const { saveToLocalFile, localVaultPath, closeVault, currentUserRole, toggleSidebar, sidebarOpen } = useVaultStore();
+  const { saveToLocalFile, localVaultPath, closeVault, currentUserRole, toggleSidebar, sidebarOpen, vault, setVaultName, googleToken, syncToCloud } = useVaultStore();
   const { isAndroid } = usePlatform();
   const [openMenu, setOpenMenu] = useState<"file" | "utils" | "help" | null>(null);
   const [showAbout, setShowAbout] = useState(false);
@@ -24,6 +25,8 @@ export function AppMenuBar({ onForceSync, isForceSyncing }: AppMenuBarProps) {
   const [showShared, setShowShared] = useState(false);
   const [showBackup, setShowBackup] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const [showVaultName, setShowVaultName] = useState(false);
+  const [vaultNameDraft, setVaultNameDraft] = useState("");
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
   const barRef = useRef<HTMLDivElement>(null);
 
@@ -53,6 +56,32 @@ export function AppMenuBar({ onForceSync, isForceSyncing }: AppMenuBarProps) {
       await checkForAppUpdate("manual");
     } finally {
       setIsCheckingUpdate(false);
+    }
+  }
+
+  async function handleSaveVaultName() {
+    const name = vaultNameDraft.trim();
+    if (!name || !vault) return;
+    try {
+      let newPath: string | null = null;
+      if (localVaultPath) {
+        const fileName = `${name.replace(/[\\/:*?"<>|]/g, "-")}.keep`;
+        newPath = isAndroid ? await getMobileVaultPath(name) : await pickSavePath(fileName);
+        if (!newPath) return;
+      }
+      const finalName = newPath
+        ? (newPath.split(/[\\/]/).pop() ?? "").replace(/\.keep$/i, "").trim() || name
+        : name;
+      setVaultName(finalName);
+      if (newPath) {
+        await saveToLocalFile(newPath);
+      } else if (localVaultPath) {
+        await saveToLocalFile(localVaultPath);
+      }
+      if (googleToken) await syncToCloud();
+      setShowVaultName(false);
+    } catch {
+      // O banner de sincronização do aplicativo apresenta o erro ao usuário.
     }
   }
 
@@ -90,6 +119,7 @@ export function AppMenuBar({ onForceSync, isForceSyncing }: AppMenuBarProps) {
             <MenuItem icon={<Plus size={14} />} label="Novo cofre" onClick={() => { close(); closeVault(); }} />
             <MenuItem icon={<FolderOpen size={14} />} label="Abrir arquivo local..." onClick={() => { close(); closeVault(); }} />
             <MenuItem icon={<Cloud size={14} />} label="Abrir do Google Drive..." onClick={() => { close(); closeVault(); }} />
+            {!vault?.collaboration && isOwner && <MenuItem icon={<Pencil size={14} />} label="Nome do cofre..." onClick={() => { close(); setVaultNameDraft(vault?.name ?? "Meu cofre"); setShowVaultName(true); }} />}
             <Separator />
             <MenuItem
               icon={<Save size={14} />}
@@ -142,6 +172,21 @@ export function AppMenuBar({ onForceSync, isForceSyncing }: AppMenuBarProps) {
       {showShared && <SharedUsersModal onClose={() => setShowShared(false)} />}
       {showBackup && <BackupModal onClose={() => setShowBackup(false)} />}
       {showChangePassword && <ChangePasswordModal onClose={() => setShowChangePassword(false)} />}
+      {showVaultName && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-sm rounded-2xl border border-vault-border bg-vault-card p-5 shadow-2xl">
+            <h2 className="text-vault-text font-semibold">Nome do cofre</h2>
+            <p className="text-vault-textMuted text-xs mt-1 mb-4">Esse nome será usado no arquivo local e no Google Drive.</p>
+            <input autoFocus value={vaultNameDraft} onChange={(e) => setVaultNameDraft(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") void handleSaveVaultName(); }}
+              className="w-full bg-vault-input border border-vault-border rounded-xl px-3.5 py-3 text-vault-text focus:outline-none focus:border-vault-primary" />
+            <div className="flex gap-2 mt-4">
+              <button onClick={() => setShowVaultName(false)} className="flex-1 py-2 rounded-xl border border-vault-border text-vault-textMuted">Cancelar</button>
+              <button onClick={() => void handleSaveVaultName()} disabled={!vaultNameDraft.trim()} className="flex-1 py-2 rounded-xl bg-vault-primary text-vault-bg font-semibold disabled:opacity-50">Salvar</button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

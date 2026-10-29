@@ -57,6 +57,8 @@ export interface PasswordGroup {
 }
 
 export interface VaultData {
+  /** User-facing vault name, also used for the Google Drive .keep filename. */
+  name?: string;
   version: string;
   owner: string;
   collaboration?: VaultCollaboration;

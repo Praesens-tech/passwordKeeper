@@ -30,11 +30,12 @@ export async function readVaultFile(path: string): Promise<string> {
   return invoke<string>("read_file", { path });
 }
 
-export async function getDefaultVaultPath(): Promise<string> {
-  return invoke<string>("get_default_vault_path");
+export async function getDefaultVaultPath(fileName = "meu-cofre.keep"): Promise<string> {
+  return invoke<string>("get_default_vault_path", { fileName });
 }
 
-export async function getMobileVaultPath(): Promise<string | null> {
+export async function getMobileVaultPath(vaultName = "Meu cofre"): Promise<string | null> {
   if (!isAndroid) return null;
-  return getDefaultVaultPath();
+  const safeName = vaultName.trim().replace(/[\\/:*?"<>|]/g, "-") || "Meu cofre";
+  return getDefaultVaultPath(`${safeName}.keep`);
 }

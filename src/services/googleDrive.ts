@@ -229,11 +229,19 @@ export async function deleteDriveFile(token: GoogleToken, fileId: string): Promi
 export async function uploadVaultFile(
   token: GoogleToken,
   content: string,
-  existingFileId?: string
+  existingFileId?: string,
+  fileName = VAULT_DRIVE_FILENAME,
 ): Promise<string> {
   const headers = await authHeaders(token);
 
   if (existingFileId) {
+    const rename = await rustFetch(
+      "PATCH",
+      `https://www.googleapis.com/drive/v3/files/${existingFileId}`,
+      { ...headers, "Content-Type": "application/json" },
+      JSON.stringify({ name: fileName }),
+    );
+    if (!rename.ok) throw new Error(`Erro ao renomear cofre no Drive (${rename.status}): ${rename.text()}`);
     // Update existing file
     const res = await rustFetch(
       "PATCH",
@@ -245,7 +253,7 @@ export async function uploadVaultFile(
     return existingFileId;
   } else {
     // Create new file (multipart upload)
-    const metadata = JSON.stringify({ name: VAULT_DRIVE_FILENAME, mimeType: "application/octet-stream" });
+    const metadata = JSON.stringify({ name: fileName, mimeType: "application/octet-stream" });
     const boundary = "vault_boundary_" + crypto.randomUUID().replace(/-/g, "");
     const multipart = [
       `--${boundary}`,

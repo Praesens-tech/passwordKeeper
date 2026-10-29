@@ -69,6 +69,7 @@ export function MasterPasswordScreen() {
     detectInitialMode(localVaultPath, googleToken)
   );
   const [masterPwd, setMasterPwd] = useState("");
+  const [vaultName, setVaultName] = useState("Meu cofre");
   const [confirmPwd, setConfirmPwd] = useState("");
   const [showPwd, setShowPwd] = useState(false);
   const [error, setError] = useState("");
@@ -142,14 +143,16 @@ export function MasterPasswordScreen() {
     setError("");
     if (masterPwd.length < 8) { setError("A senha mestra deve ter pelo menos 8 caracteres"); return; }
     if (masterPwd !== confirmPwd) { setError("As senhas não conferem"); return; }
+    if (!vaultName.trim()) { setError("Digite um nome para o cofre"); return; }
     setLoading(true);
     try {
-      const savePath = isAndroid ? null : await pickSavePath("meu-cofre.keep");
+      const fileName = `${vaultName.trim().replace(/[\\/:*?"<>|]/g, "-")}.keep`;
+      const savePath = isAndroid ? await getMobileVaultPath(vaultName) : await pickSavePath(fileName);
       if (!isAndroid && !savePath) {
         setLoading(false);
         return;
       }
-      createVault(masterPwd);
+      createVault(masterPwd, savePath ? vaultNameFromPath(savePath) : vaultName);
       if (savePath) await saveToLocalFile(savePath);
     } catch {
       setError("Não foi possível criar o cofre neste local");
@@ -331,8 +334,9 @@ export function MasterPasswordScreen() {
     setError("");
     if (masterPwd.length < 8) { setError("A senha mestra deve ter pelo menos 8 caracteres"); return; }
     if (masterPwd !== confirmPwd) { setError("As senhas não conferem"); return; }
+    if (!vaultName.trim()) { setError("Digite um nome para o cofre"); return; }
     if (!pendingShare) return;
-    createVault(masterPwd);
+    createVault(masterPwd, vaultName);
     mergeSharedEntries(pendingShare.entries, pendingShare.group);
   }
 
@@ -432,6 +436,7 @@ export function MasterPasswordScreen() {
             <form onSubmit={handleCreate} className="space-y-4 animate-fade-in">
               <BackButton onClick={() => { reset(); setMode("choose"); }} />
               <h2 className="text-vault-text font-semibold text-lg">Criar Novo Cofre</h2>
+              <TextField label="Nome do cofre" value={vaultName} onChange={setVaultName} placeholder="Ex.: Pessoal" />
               <div className="p-3 bg-vault-primary/10 border border-vault-primary/20 rounded-xl space-y-1.5">
                 <p className="text-xs text-vault-textSecondary font-medium">Como funciona?</p>
                 <p className="text-xs text-vault-textMuted leading-relaxed">
@@ -719,6 +724,7 @@ export function MasterPasswordScreen() {
             <form onSubmit={handleImportToNewVault} className="space-y-4 animate-fade-in">
               <BackButton onClick={() => { reset(); setMode("import-dest"); }} />
               <h2 className="text-vault-text font-semibold text-lg">Criar cofre com as senhas importadas</h2>
+              <TextField label="Nome do cofre" value={vaultName} onChange={setVaultName} placeholder="Ex.: Pessoal" />
               <div className="p-3 bg-vault-primary/10 border border-vault-primary/20 rounded-xl text-xs text-vault-textSecondary">
                 Defina a senha mestra para o novo cofre. Ela criptografará suas senhas e nunca sai do dispositivo.
               </div>
@@ -778,6 +784,23 @@ function BackButton({ onClick }: { onClick: () => void }) {
       ← Voltar
     </button>
   );
+}
+
+function TextField({ label, value, onChange, placeholder }: {
+  label: string; value: string; onChange: (value: string) => void; placeholder?: string;
+}) {
+  return (
+    <label className="block">
+      <span className="block text-sm font-medium text-vault-textSecondary mb-1.5">{label}</span>
+      <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
+        className="w-full bg-vault-input border border-vault-border rounded-xl px-3.5 py-3 text-vault-text placeholder-vault-textMuted focus:outline-none focus:border-vault-primary transition-colors" />
+    </label>
+  );
+}
+
+function vaultNameFromPath(path: string): string {
+  const fileName = path.split(/[\\/]/).pop() ?? path;
+  return fileName.replace(/\.keep$/i, "").trim() || "Meu cofre";
 }
 
 function PasswordField({ label, value, onChange, show, onToggle, placeholder }: {

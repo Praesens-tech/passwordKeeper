@@ -630,7 +630,7 @@ async fn read_file(path: String) -> Result<String, String> {
 }
 
 #[tauri::command]
-async fn get_default_vault_path(app: tauri::AppHandle) -> Result<String, String> {
+async fn get_default_vault_path(app: tauri::AppHandle, file_name: String) -> Result<String, String> {
     let dir = app
         .path()
         .app_data_dir()
@@ -640,7 +640,12 @@ async fn get_default_vault_path(app: tauri::AppHandle) -> Result<String, String>
         .await
         .map_err(|e| format!("Nao foi possivel preparar diretorio do cofre: {}", e))?;
 
-    Ok(dir.join("meu-cofre.keep").to_string_lossy().into_owned())
+    let safe_name = std::path::Path::new(&file_name)
+        .file_name()
+        .and_then(|value| value.to_str())
+        .filter(|value| value.to_ascii_lowercase().ends_with(".keep"))
+        .unwrap_or("meu-cofre.keep");
+    Ok(dir.join(safe_name).to_string_lossy().into_owned())
 }
 
 /// Encerra o processo imediatamente.

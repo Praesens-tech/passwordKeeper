@@ -124,7 +124,8 @@ interface VaultStore {
   initFromStorage: () => Promise<void>;
 
   // ── Vault lifecycle ────────────────────────────────────────────────────────
-  createVault: (masterPassword: string) => void;
+  createVault: (masterPassword: string, name?: string) => void;
+  setVaultName: (name: string) => void;
   unlockVault: (encryptedData: string, masterPassword: string) => Promise<void>;
   lockVault: () => void;
   closeVault: () => void;
@@ -360,8 +361,9 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     return role === "owner" || role === "editor";
   },
 
-  createVault: (masterPassword) => {
+  createVault: (masterPassword, name = "Meu cofre") => {
     const vault: VaultData = {
+      name: name.trim() || "Meu cofre",
       version: "1.0",
       owner: "",
       sharedWith: [],
@@ -370,6 +372,12 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
       entries: [],
     };
     set({ vault, masterPassword, vaultDataKey: null, vaultKeySlots: [], isLocked: false, isDirty: true });
+  },
+
+  setVaultName: (name) => {
+    const normalized = name.trim();
+    if (!normalized) return;
+    set((s) => ({ vault: s.vault ? { ...s.vault, name: normalized } : s.vault, isDirty: true }));
   },
 
   unlockVault: async (encryptedData, masterPassword) => {
@@ -877,7 +885,7 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
       let savePath = path ?? get().localVaultPath;
       if (!savePath) {
         savePath = /android/i.test(navigator.userAgent)
-          ? await getMobileVaultPath()
+          ? await getMobileVaultPath(get().vault?.name)
           : await pickSavePath("meu-cofre.keep");
         if (!savePath) { set({ isSyncing: false }); return; }
       }
@@ -903,7 +911,7 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
       let loadPath: string | null | undefined = path;
       if (!loadPath) {
         loadPath = /android/i.test(navigator.userAgent)
-          ? (get().localVaultPath ?? await getMobileVaultPath())
+          ? (get().localVaultPath ?? await getMobileVaultPath(get().vault?.name))
           : await pickOpenPath();
         if (!loadPath) { set({ isSyncing: false }); throw new Error("Nenhum arquivo selecionado"); }
       }
@@ -969,7 +977,9 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
       const token = await get().ensureValidToken();
       const { driveFileId } = get();
       const encrypted = await get().getEncryptedVault();
-      const newFileId = await uploadVaultFile(token, encrypted, driveFileId ?? undefined);
+      const { vault } = get();
+      const driveName = `${(vault?.name || "Meu cofre").trim()}.keep`;
+      const newFileId = await uploadVaultFile(token, encrypted, driveFileId ?? undefined, driveName);
       const revision = await getFileVersion(token, newFileId);
       savePersisted("pk_drive_revision", revision);
       savePersisted("pk_drive_file_id", newFileId);
