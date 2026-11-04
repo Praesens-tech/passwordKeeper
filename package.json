@@ -1,7 +1,7 @@
 {
   "name": "password-keeper",
   "private": true,
-  "version": "0.2.11",
+  "version": "0.2.13",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -22,6 +22,7 @@
     "@tauri-apps/plugin-process": "^2.4.0",
     "@tauri-apps/plugin-store": "^2.4.2",
     "@tauri-apps/plugin-updater": "^2.13.1",
+    "firebase": "^11.10.0",
     "lucide-react": "^0.469.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -43,7 +44,7 @@
     "vite": "^6.0.6",
     "vitest": "^4.1.5"
   },
-  "description": "Aplicativo multiplataforma de cofre de senhas feito com Tauri, React e TypeScript. Os dados ficam criptografados antes de serem salvos localmente ou enviados ao Google Drive.",
+  "description": "Aplicativo multiplataforma de cofre de senhas feito com Tauri, React e TypeScript. O cofre pessoal pode sincronizar pelo Google Drive; compartilhamentos usam Firebase com criptografia no cliente.",
   "main": "postcss.config.js",
   "directories": {
     "doc": "docs"
@@ -63,5 +64,8 @@
   "bugs": {
     "url": "https://github.com/Praesens-tech/passwordKeeper/issues"
   },
-  "homepage": "https://github.com/Praesens-tech/passwordKeeper#readme"
+  "homepage": "https://github.com/Praesens-tech/passwordKeeper#readme",
+  "overrides": {
+    "@grpc/grpc-js": "^1.13.6"
+  }
 }

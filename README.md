@@ -1,25 +1,25 @@
 # Password Keeper
 
-Password Keeper e um cofre de senhas multiplataforma feito com **Tauri 2**, **React 18**, **TypeScript**, **Rust** e **Zustand**. O projeto foi desenhado para manter credenciais pessoais e compartilhadas criptografadas antes de qualquer persistencia local ou envio ao Google Drive.
+Password Keeper e um cofre de senhas multiplataforma feito com **Tauri 2**, **React 18**, **TypeScript**, **Rust** e **Zustand**. O projeto criptografa credenciais pessoais e compartilhadas antes da persistencia local ou do envio aos servicos de sincronizacao.
 
 O objetivo deste README e ser o documento de referencia do projeto: produto, arquitetura, seguranca, fluxos, desenvolvimento, release e downloads.
 
 ## Downloads
 
-Versao publica mais recente: **v0.2.5**
+Versao publica mais recente: **v0.2.13**
 
-Pagina da release: [Password Keeper v0.2.5](https://github.com/Praesens-tech/passwordKeeper/releases/tag/v0.2.5)
+Pagina da release: [Password Keeper v0.2.13](https://github.com/Praesens-tech/passwordKeeper/releases/tag/v0.2.13)
 
 | Plataforma | Arquivo recomendado | Link direto |
 |---|---:|---|
-| Windows | `.exe` installer | [Password.Keeper_0.2.5_x64-setup.exe](https://github.com/Praesens-tech/passwordKeeper/releases/download/v0.2.5/Password.Keeper_0.2.5_x64-setup.exe) |
-| Windows | `.msi` installer | [Password.Keeper_0.2.5_x64_en-US.msi](https://github.com/Praesens-tech/passwordKeeper/releases/download/v0.2.5/Password.Keeper_0.2.5_x64_en-US.msi) |
-| macOS Apple Silicon | `.dmg` | [Password.Keeper_0.2.5_aarch64.dmg](https://github.com/Praesens-tech/passwordKeeper/releases/download/v0.2.5/Password.Keeper_0.2.5_aarch64.dmg) |
-| macOS Intel | `.dmg` | [Password.Keeper_0.2.5_x64.dmg](https://github.com/Praesens-tech/passwordKeeper/releases/download/v0.2.5/Password.Keeper_0.2.5_x64.dmg) |
-| Linux | `.AppImage` | [Password.Keeper_0.2.5_amd64.AppImage](https://github.com/Praesens-tech/passwordKeeper/releases/download/v0.2.5/Password.Keeper_0.2.5_amd64.AppImage) |
-| Linux Debian/Ubuntu | `.deb` | [Password.Keeper_0.2.5_amd64.deb](https://github.com/Praesens-tech/passwordKeeper/releases/download/v0.2.5/Password.Keeper_0.2.5_amd64.deb) |
-| Linux Fedora/RHEL | `.rpm` | [Password.Keeper-0.2.5-1.x86_64.rpm](https://github.com/Praesens-tech/passwordKeeper/releases/download/v0.2.5/Password.Keeper-0.2.5-1.x86_64.rpm) |
-| Android | `.apk` side-loading | [PasswordKeeper-0.2.5-android.apk](https://github.com/Praesens-tech/passwordKeeper/releases/download/v0.2.5/PasswordKeeper-0.2.5-android.apk) |
+| Windows | `.exe` installer | [Password.Keeper_0.2.13_x64-setup.exe](https://github.com/Praesens-tech/passwordKeeper/releases/download/v0.2.13/Password.Keeper_0.2.13_x64-setup.exe) |
+| Windows | `.msi` installer | [Password.Keeper_0.2.13_x64_en-US.msi](https://github.com/Praesens-tech/passwordKeeper/releases/download/v0.2.13/Password.Keeper_0.2.13_x64_en-US.msi) |
+| macOS Apple Silicon | `.dmg` | [Password.Keeper_0.2.13_aarch64.dmg](https://github.com/Praesens-tech/passwordKeeper/releases/download/v0.2.13/Password.Keeper_0.2.13_aarch64.dmg) |
+| macOS Intel | `.dmg` | [Password.Keeper_0.2.13_x64.dmg](https://github.com/Praesens-tech/passwordKeeper/releases/download/v0.2.13/Password.Keeper_0.2.13_x64.dmg) |
+| Linux | `.AppImage` | [Password.Keeper_0.2.13_amd64.AppImage](https://github.com/Praesens-tech/passwordKeeper/releases/download/v0.2.13/Password.Keeper_0.2.13_amd64.AppImage) |
+| Linux Debian/Ubuntu | `.deb` | [Password.Keeper_0.2.13_amd64.deb](https://github.com/Praesens-tech/passwordKeeper/releases/download/v0.2.13/Password.Keeper_0.2.13_amd64.deb) |
+| Linux Fedora/RHEL | `.rpm` | [Password.Keeper-0.2.13-1.x86_64.rpm](https://github.com/Praesens-tech/passwordKeeper/releases/download/v0.2.13/Password.Keeper-0.2.13-1.x86_64.rpm) |
+| Android | `.apk` side-loading | [PasswordKeeper-0.2.13-android.apk](https://github.com/Praesens-tech/passwordKeeper/releases/download/v0.2.13/PasswordKeeper-0.2.13-android.apk) |
 
 Observacoes:
 
@@ -29,7 +29,7 @@ Observacoes:
 
 ## O Que o Produto Faz
 
-Password Keeper guarda credenciais em um arquivo criptografado `.keep`. Esse arquivo pode ficar apenas no dispositivo ou ser sincronizado pelo Google Drive. A senha mestra nunca e enviada ao Google, ao GitHub ou a qualquer backend de terceiros.
+Password Keeper guarda credenciais em um arquivo criptografado `.keep`. O cofre pessoal pode ficar apenas no dispositivo ou ser sincronizado pelo Google Drive. O compartilhamento de cofres, grupos e entradas usa documentos criptografados no Firebase/Firestore. A senha mestra nunca e enviada ao Google, ao Firebase ou ao GitHub.
 
 Principais recursos:
 
@@ -43,6 +43,7 @@ Principais recursos:
 - Escolher a localizacao do arquivo `.keep` ao criar um cofre novo no desktop.
 - Sincronizar cofre principal com Google Drive.
 - Detectar mudancas remotas via Google Drive Changes API.
+- Compartilhar cofres, grupos e entradas no Firebase/Firestore, sem arquivos colaborativos no Drive.
 - Compartilhar cofre, grupo ou entrada como documento colaborativo separado.
 - Permissoes por colaborador: leitor, editor e proprietario.
 - Senha de compartilhamento separada da senha mestra.
@@ -81,7 +82,7 @@ Ela tambem inclui links de download por plataforma e um historico simples de ver
 | HTTP desktop | Rust `reqwest` via comando Tauri |
 | HTTP Android | Kotlin `HttpURLConnection` via JNI |
 | OAuth | Google OAuth 2.0 com PKCE |
-| Cloud | Google Drive API |
+| Cloud | Google Drive API (cofre pessoal) + Firebase/Firestore (compartilhamentos) |
 | CI/CD | GitHub Actions |
 
 ## Arquitetura Geral
@@ -93,6 +94,7 @@ flowchart LR
   Store --> Crypto[Crypto Service<br/>AES-256-GCM + PBKDF2]
   Store --> Local[Local File Service<br/>.keep]
   Store --> Drive[Google Drive Service]
+  Store --> Firebase[Firebase Auth + Firestore Service]
   Drive --> NativeFetch[Tauri native_fetch]
   NativeFetch --> Desktop[Desktop<br/>Rust reqwest]
   NativeFetch --> Android[Android<br/>Kotlin HttpURLConnection via JNI]
@@ -101,6 +103,7 @@ flowchart LR
   Crypto --> Encrypted[Encrypted .keep envelope]
   Encrypted --> Local
   Encrypted --> Google
+  Encrypted --> Firebase
 ```
 
 ### Principios
@@ -108,8 +111,8 @@ flowchart LR
 1. O cofre descriptografado vive apenas em memoria.
 2. Toda persistencia usa conteudo criptografado.
 3. A senha mestra nao e persistida.
-4. O Google Drive armazena arquivos opacos.
-5. Compartilhamentos usam arquivos colaborativos separados.
+4. Google Drive opcional sincroniza o cofre pessoal; Firestore armazena envelopes cifrados de compartilhamentos.
+5. Compartilhamentos usam documentos separados no Firestore.
 6. Permissoes da interface sao aplicadas a partir do papel do usuario e do escopo compartilhado.
 
 ## Modelo de Dados
@@ -309,32 +312,28 @@ sequenceDiagram
       Store->>Drive: download file
       Store->>Store: decrypt + refresh
     end
-    alt Compartilhamento mudou
-      Store->>Drive: download shared file
-      Store->>Store: decrypt + merge
-    end
   end
 ```
 
 ### Compartilhamento Colaborativo
 
-Compartilhar nao expõe o arquivo principal do usuario. O app cria um arquivo separado no Google Drive:
+Compartilhar nao expoe o arquivo principal do usuario. O app cria um documento separado no Firestore:
 
 ```text
-pk-collab-<documentId>.keep
+sharedVaults/<documentId>
 ```
 
-Esse arquivo contem apenas o escopo compartilhado: cofre inteiro, grupo ou entrada.
+Esse documento contem apenas o escopo compartilhado: cofre inteiro, grupo ou entrada. O conteudo usa envelope v2 cifrado, key slots do proprietario e colaborador, e acesso associado ao e-mail Google verificado.
 
 ```mermaid
 flowchart TD
   Owner[Proprietario] --> Main[meu-cofre.keep]
   Owner --> Create[Cria documento colaborativo]
-  Create --> Collab[pk-collab-documentId.keep]
+  Create --> Collab[Firestore sharedVaults/documentId]
   Collab --> Slot1[Key slot owner]
   Collab --> Slot2[Key slot colaborador]
-  Owner --> DriveShare[Google Drive permission]
-  DriveShare --> Collaborator[Colaborador]
+  Owner --> EmailGrant[E-mail verificado autorizado]
+  EmailGrant --> Collaborator[Colaborador]
   Collaborator --> Password[Senha de compartilhamento]
   Password --> Slot2
   Slot2 --> Collab
@@ -343,7 +342,7 @@ flowchart TD
 ### Edicao em Compartilhamento
 
 - Leitores visualizam.
-- Editores escrevem no arquivo colaborativo.
+- Editores escrevem no documento colaborativo do Firestore.
 - Proprietarios sincronizam alteracoes recebidas para o cofre principal.
 - Entradas e grupos compartilhados recebem IDs namespaced no cliente, por exemplo:
 
@@ -609,8 +608,8 @@ Workflow: [.github/workflows/release.yml](.github/workflows/release.yml)
 Dispara com tags:
 
 ```bash
-git tag v0.2.5
-git push origin v0.2.5
+git tag v0.2.13
+git push origin v0.2.13
 ```
 
 Gera:

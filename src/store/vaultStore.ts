@@ -10,8 +10,6 @@ import {
   deleteDriveFile,
   getDriveChangesStartToken,
   listDriveChanges,
-  createSharedVaultFile,
-  shareFile,
 } from "../services/googleDrive";
 import {
   pickSavePath,
@@ -21,6 +19,18 @@ import {
   getMobileVaultPath,
 } from "../services/localFile";
 import { persistSave, persistLoad } from "../services/storage";
+import {
+  createFirebaseVault,
+  firebaseDocumentIdForDriveFile,
+  getFirebaseVault,
+  listFirebaseSharesForEmail,
+  signInFirebaseWithGoogleToken,
+  signOutFirebase,
+  updateFirebaseVault,
+  updateFirebaseShareAccess,
+  deleteFirebaseVault,
+  type FirebaseVaultDocument,
+} from "../services/firebase";
 
 function generateId(): string {
   return crypto.randomUUID();
@@ -85,6 +95,10 @@ interface VaultStore {
   driveRevision: string | null;
   driveChangesToken: string | null;
   userInfo: { email: string; name: string; picture: string } | null;
+  firebaseVaultId: string | null;
+  firebaseRevision: number | null;
+  firebaseVaultMap: Record<string, { id: string; revision: number | null }>;
+  firebaseAuthenticated: boolean;
 
   // ── Local storage ──────────────────────────────────────────────────────────
   localVaultPath: string | null;
@@ -112,6 +126,13 @@ interface VaultStore {
   setDriveRevision: (revision: string | null) => void;
   setDriveChangesToken: (token: string | null) => void;
   initDriveChangesToken: () => Promise<void>;
+  setFirebaseVaultId: (id: string | null, revision?: number | null) => void;
+  authenticateFirebase: () => Promise<{ uid: string; email: string | null }>;
+  restoreOwnedFirebaseShares: () => Promise<void>;
+  linkFirebaseVault: () => Promise<boolean>;
+  migrateVaultToFirebase: () => Promise<"created" | "already-linked">;
+  syncToFirebase: () => Promise<void>;
+  applyFirebaseVaultSnapshot: (document: FirebaseVaultDocument | null) => Promise<void>;
 
   // ── Role ───────────────────────────────────────────────────────────────────
   currentUserRole: (scopeType?: SharedScopeType, scopeId?: string) => VaultPermission;
@@ -133,7 +154,8 @@ interface VaultStore {
   addVaultPasswordSlot: (id: string, password: string) => Promise<void>;
   mergeSharedEntries: (entries: PasswordEntry[], group?: PasswordGroup | null) => void;
   mergeFromVault: (otherVault: VaultData) => number;
-  addSharedSource: (fileId: string, sharedVault: VaultData, password: string, revision: string | null, openedEnvelope?: { dataKey: string | null; keySlots: import("../services/crypto").VaultKeySlot[] }) => void;
+  addSharedSource: (fileId: string, sharedVault: VaultData, password: string, revision: string | null, openedEnvelope?: { dataKey: string | null; keySlots: import("../services/crypto").VaultKeySlot[] }, backend?: "drive" | "firebase") => void;
+  refreshFirebaseSharedSource: (sourceId: string, document?: FirebaseVaultDocument | null) => Promise<void>;
   refreshSharedSources: () => Promise<string | false>;
   syncSharedSource: (sourceId: string) => Promise<void>;
   syncOwnedSharedSourcesFromVault: () => void;
@@ -171,11 +193,7 @@ interface VaultStore {
   rejectDeletion: (requestId: string) => void;
 
   // ── Sharing / permissions ──────────────────────────────────────────────────
-  /**
-   * Cria um arquivo colaborativo separado (pk-collab-<id>.keep) no Drive,
-   * adiciona a SharedSource ao estado local, e compartilha o arquivo com o colaborador.
-   * Retorna a sharePassword gerada para ser exibida ao usuário.
-   */
+  /** Cria um documento cifrado de colaboração no Firestore. Retorna seu código. */
   createSharedDocument: (params: {
     targetType: SharedScopeType;
     targetId: string | null;
@@ -183,7 +201,7 @@ interface VaultStore {
     collaboratorEmail: string;
     collaboratorRole: VaultPermission;
     sharePassword: string;
-  }) => Promise<void>;
+  }) => Promise<string>;
   updateSharedUserRole: (email: string, role: VaultPermission, scopeType?: SharedScopeType, scopeId?: string, scopeTitle?: string) => void;
   removeSharedUser: (email: string, scopeType?: SharedScopeType, scopeId?: string) => void;
 
@@ -213,6 +231,10 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
   driveRevision: loadPersisted<string>("pk_drive_revision"),
   driveChangesToken: loadPersisted<string>("pk_drive_changes_token"),
   userInfo: loadPersisted<{ email: string; name: string; picture: string }>("pk_user_info"),
+  firebaseVaultId: loadPersisted<string>("pk_firebase_vault_id"),
+  firebaseRevision: loadPersisted<number>("pk_firebase_revision"),
+  firebaseVaultMap: loadPersisted<Record<string, { id: string; revision: number | null }>>("pk_firebase_vault_map") ?? {},
+  firebaseAuthenticated: false,
   localVaultPath: loadPersisted<string>("pk_local_vault_path"),
   vault: null,
   sharedSources: [],
@@ -234,12 +256,15 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
       ? { ...token, refresh_token: existing.refresh_token }
       : token;
     savePersisted("pk_google_token", next);
-    set({ googleToken: next });
+    set((s) => ({ googleToken: next, firebaseAuthenticated: next ? s.firebaseAuthenticated : false }));
   },
   setUserInfo: (info) => {
     savePersisted("pk_user_info", info);
     set((s) => ({
       userInfo: info,
+      firebaseAuthenticated: s.userInfo?.email && info?.email && s.userInfo.email.toLowerCase() !== info.email.toLowerCase()
+        ? false
+        : s.firebaseAuthenticated,
       vault: s.vault && !s.vault.owner && info
         ? { ...s.vault, owner: info.email }
         : s.vault,
@@ -247,7 +272,20 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
   },
   setDriveFileId: (id) => {
     savePersisted("pk_drive_file_id", id);
-    set({ driveFileId: id });
+    const state = get();
+    const link = id
+      ? state.firebaseVaultMap[`drive:${id}`]
+      : (state.localVaultPath ? state.firebaseVaultMap[`local:${state.localVaultPath}`] : undefined);
+    const nextMap = id && link ? { ...state.firebaseVaultMap, [`drive:${id}`]: link } : state.firebaseVaultMap;
+    if (id && link) savePersisted("pk_firebase_vault_map", nextMap);
+    savePersisted("pk_firebase_vault_id", link?.id ?? null);
+    savePersisted("pk_firebase_revision", link?.revision ?? null);
+    set({
+      driveFileId: id,
+      firebaseVaultMap: nextMap,
+      firebaseVaultId: link?.id ?? null,
+      firebaseRevision: link?.revision ?? null,
+    });
   },
   setDriveRevision: (revision) => {
     savePersisted("pk_drive_revision", revision);
@@ -257,6 +295,51 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
   setDriveChangesToken: (token) => {
     savePersisted("pk_drive_changes_token", token);
     set({ driveChangesToken: token });
+  },
+
+  setFirebaseVaultId: (id, revision = null) => {
+    if (get().firebaseVaultId === id && get().firebaseRevision === (id ? revision : null)) return;
+    const state = get();
+    let firebaseVaultMap = state.firebaseVaultMap;
+    if (id) {
+      const link = { id, revision };
+      firebaseVaultMap = { ...firebaseVaultMap };
+      if (state.driveFileId) firebaseVaultMap[`drive:${state.driveFileId}`] = link;
+      if (state.localVaultPath) firebaseVaultMap[`local:${state.localVaultPath}`] = link;
+      savePersisted("pk_firebase_vault_map", firebaseVaultMap);
+    }
+    savePersisted("pk_firebase_vault_id", id);
+    savePersisted("pk_firebase_revision", id ? revision : null);
+    set({ firebaseVaultId: id, firebaseRevision: id ? revision : null, firebaseVaultMap });
+  },
+
+  authenticateFirebase: async () => {
+    const token = await get().ensureValidToken();
+    const identity = await signInFirebaseWithGoogleToken(token.access_token);
+    set({ firebaseAuthenticated: true });
+    return identity;
+  },
+
+  restoreOwnedFirebaseShares: async () => {
+    const { masterPassword } = get();
+    if (!masterPassword) return;
+    const identity = await get().authenticateFirebase();
+    const email = identity.email?.trim().toLowerCase();
+    if (!email) return;
+    const documents = await listFirebaseSharesForEmail(email);
+    for (const document of documents) {
+      if (document.ownerEmail?.toLowerCase() !== email) continue;
+      try {
+        const opened = await decryptVaultEnvelope(document.ciphertext, masterPassword);
+        const sharedVault = JSON.parse(opened.plaintext) as VaultData;
+        get().addSharedSource(document.id, sharedVault, masterPassword, String(document.revision), {
+          dataKey: opened.dataKey,
+          keySlots: opened.keySlots,
+        }, "firebase");
+      } catch {
+        // Ignore documents owned by this account that use a different owner password.
+      }
+    }
   },
 
   initDriveChangesToken: async () => {
@@ -273,13 +356,16 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
   },
 
   initFromStorage: async () => {
-    const [googleToken, userInfo, driveFileId, driveRevision, driveChangesToken, localVaultPath] = await Promise.all([
+    const [googleToken, userInfo, driveFileId, driveRevision, driveChangesToken, localVaultPath, firebaseVaultId, firebaseRevision, firebaseVaultMap] = await Promise.all([
       persistLoad<GoogleToken>("pk_google_token"),
       persistLoad<{ email: string; name: string; picture: string }>("pk_user_info"),
       persistLoad<string>("pk_drive_file_id"),
       persistLoad<string>("pk_drive_revision"),
       persistLoad<string>("pk_drive_changes_token"),
       persistLoad<string>("pk_local_vault_path"),
+      persistLoad<string>("pk_firebase_vault_id"),
+      persistLoad<number>("pk_firebase_revision"),
+      persistLoad<Record<string, { id: string; revision: number | null }>>("pk_firebase_vault_map"),
     ]);
     set((s) => ({
       googleToken: googleToken ?? s.googleToken,
@@ -288,7 +374,81 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
       driveRevision: driveRevision ?? s.driveRevision,
       driveChangesToken: driveChangesToken ?? s.driveChangesToken,
       localVaultPath: localVaultPath ?? s.localVaultPath,
+      firebaseVaultId: firebaseVaultId ?? s.firebaseVaultId,
+      firebaseRevision: firebaseRevision ?? s.firebaseRevision,
+      firebaseVaultMap: firebaseVaultMap ?? s.firebaseVaultMap,
     }));
+  },
+
+  linkFirebaseVault: async () => {
+    const { googleToken, driveFileId, firebaseVaultId, vault, userInfo } = get();
+    if (!googleToken || !vault || vault.collaboration) return false;
+    const identity = await get().authenticateFirebase();
+    if (userInfo?.email && identity.email && userInfo.email.toLowerCase() !== identity.email.toLowerCase()) {
+      throw new Error("A conta Firebase não corresponde à conta Google deste cofre.");
+    }
+    const documentId = firebaseVaultId || (driveFileId ? firebaseDocumentIdForDriveFile(driveFileId) : null);
+    if (!documentId) return false;
+
+    let remote: FirebaseVaultDocument | null;
+    try {
+      remote = await getFirebaseVault(documentId);
+    } catch (error) {
+      const message = String(error).toLowerCase();
+      if (message.includes("permission") || message.includes("insufficient permissions")) return false;
+      throw error;
+    }
+    if (!remote || !remote.memberUids?.includes(identity.uid)) return false;
+    const previousRevision = get().firebaseRevision;
+    if (previousRevision !== null && remote.revision > previousRevision) {
+      await get().applyFirebaseVaultSnapshot(remote);
+    }
+    get().setFirebaseVaultId(documentId, remote.revision);
+    return true;
+  },
+
+  migrateVaultToFirebase: async () => {
+    const { vault, masterPassword, googleToken, userInfo, driveFileId, firebaseVaultId } = get();
+    if (!vault || !masterPassword) throw new Error("Desbloqueie o cofre antes de migrar.");
+    if (vault.collaboration) throw new Error("Migre o cofre pessoal; cofres compartilhados em arquivos separados exigem uma migração própria.");
+    if (!googleToken) throw new Error("Conecte a conta Google que possui este cofre antes de migrar.");
+
+    const identity = await get().authenticateFirebase();
+    set({ firebaseAuthenticated: true });
+    if (userInfo?.email && identity.email && userInfo.email.toLowerCase() !== identity.email.toLowerCase()) {
+      throw new Error("A conta Firebase não corresponde à conta Google deste cofre.");
+    }
+    const documentId = firebaseVaultId || (driveFileId ? firebaseDocumentIdForDriveFile(driveFileId) : generateId());
+
+    try {
+      const existing = await getFirebaseVault(documentId);
+      if (existing) {
+        if (existing.ownerUid !== identity.uid || !existing.memberUids.includes(identity.uid)) {
+          throw new Error("Já existe um cofre Firebase com este identificador e outra identidade.");
+        }
+        get().setFirebaseVaultId(documentId, existing.revision);
+        return "already-linked";
+      }
+    } catch (error) {
+      const message = String(error).toLowerCase();
+      if (!message.includes("permission") && !message.includes("insufficient permissions")) throw error;
+      // Firestore rules deny reads for a document that does not exist. The
+      // create-only transaction below remains safe and cannot overwrite it.
+    }
+
+    const ciphertext = await get().getEncryptedVault();
+    await createFirebaseVault(documentId, ciphertext, {
+      ownerUid: identity.uid,
+      memberUids: [identity.uid],
+      editorUids: [],
+      ownerEmail: identity.email ?? undefined,
+    });
+    const verified = await getFirebaseVault(documentId);
+    if (!verified || verified.ownerUid !== identity.uid || verified.ciphertext !== ciphertext) {
+      throw new Error("A cópia Firebase não passou na verificação. O cofre original continua intacto.");
+    }
+    get().setFirebaseVaultId(documentId, verified.revision);
+    return "created";
   },
 
   currentUserRole: (scopeType, scopeId): VaultPermission => {
@@ -385,10 +545,14 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     const raw = JSON.parse(opened.plaintext);
     // Migrate older vaults that lack new fields
     const vault: VaultData = {
-      sharedWith: [],
-      deletionRequests: [],
-      owner: "",
       ...raw,
+      name: raw.name ?? "Meu cofre",
+      version: raw.version ?? "1",
+      groups: raw.groups ?? [],
+      entries: raw.entries ?? [],
+      sharedWith: raw.sharedWith ?? [],
+      deletionRequests: raw.deletionRequests ?? [],
+      owner: raw.owner ?? "",
     };
     set({
       vault,
@@ -401,6 +565,7 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
   },
 
   lockVault: () => {
+    signOutFirebase().catch(() => {});
     savePersisted("pk_drive_changes_token", null);
     set({
       isLocked: true,
@@ -409,18 +574,22 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
       vaultKeySlots: [],
       vault: null,
       sharedSources: [],
+      firebaseAuthenticated: false,
       selectedEntryId: null,
       driveChangesToken: null,
     });
   },
 
   closeVault: () => {
+    signOutFirebase().catch(() => {});
     // Only clear vault-specific state — keep Google credentials so user
     // doesn't have to re-authenticate on the next open.
     savePersisted("pk_drive_file_id", null);
     savePersisted("pk_drive_revision", null);
     savePersisted("pk_local_vault_path", null);
     savePersisted("pk_drive_changes_token", null);
+    savePersisted("pk_firebase_vault_id", null);
+    savePersisted("pk_firebase_revision", null);
     set({
       isLocked: true,
       masterPassword: "",
@@ -436,6 +605,9 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
       driveFileId: null,
       driveRevision: null,
       driveChangesToken: null,
+      firebaseVaultId: null,
+      firebaseRevision: null,
+      firebaseAuthenticated: false,
       syncError: null,
       isDirty: false,
     });
@@ -518,13 +690,13 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     return newEntriesCount;
   },
 
-  addSharedSource: (fileId, sharedVault, password, revision, openedEnvelope) => {
+  addSharedSource: (fileId, sharedVault, password, revision, openedEnvelope, backend = "drive") => {
     const sourceId = sharedVault.collaboration?.documentId || fileId;
     const owner = sharedVault.owner || "Compartilhado";
     const { userInfo } = get();
-    const role = sharedVault.owner === userInfo?.email
+    const role = sharedVault.owner?.toLowerCase() === userInfo?.email?.toLowerCase()
       ? "owner"
-      : sharedVault.sharedWith?.find((u) => u.email === userInfo?.email)?.role
+      : sharedVault.sharedWith?.find((u) => u.email.toLowerCase() === userInfo?.email?.toLowerCase())?.role
         ?? sharedVault.sharedWith?.[0]?.role
         ?? "reader";
     const groups = (sharedVault.groups ?? []).map((group) => ({
@@ -540,6 +712,7 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
       sharedSourceId: sourceId,
       groupId: entry.groupId ? `shared:${sourceId}:group:${entry.groupId}` : undefined,
     }));
+    const syncedAt = now();
     const remoteEntriesById = new Map(entries.map((entry) => [entry.sourceEntryId ?? entry.id, entry]));
     const remoteGroupsById = new Map(groups.map((group) => [group.sourceGroupId ?? group.id, group]));
     set((s) => {
@@ -555,7 +728,9 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
           const remote = remoteEntriesById.get(entry.id);
           if (!remote) return entry;
           const { id, sourceEntryId, sharedSourceId, groupId, ...data } = remote;
-          const merged = { ...entry, ...data };
+          const merged = Date.parse(data.updatedAt) > Date.parse(entry.updatedAt)
+            ? { ...entry, ...data }
+            : entry;
           if (merged.updatedAt !== entry.updatedAt) anyUpdated = true;
           return merged;
         });
@@ -575,7 +750,9 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
           const remote = remoteGroupsById.get(group.id);
           if (!remote) return group;
           const { id, sourceGroupId, sharedSourceId, ...data } = remote;
-          return { ...group, ...data };
+          return Date.parse(data.updatedAt) > Date.parse(group.updatedAt)
+            ? { ...group, ...data }
+            : group;
         });
 
         if (newEntries.length > 0 || anyUpdated) isDirty = true;
@@ -596,6 +773,7 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
           {
             id: sourceId,
             fileId,
+            backend,
             name: sharedVault.collaboration?.title || "Compartilhamento",
             owner,
             role,
@@ -605,9 +783,9 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
             dataKey: openedEnvelope?.dataKey ?? null,
             keySlots: openedEnvelope?.keySlots ?? [],
             revision,
-            lastSyncAt: now(),
+            lastSyncAt: syncedAt,
             updatedBy: owner,
-            updatedAt: now(),
+            updatedAt: syncedAt,
             groups,
             entries,
           },
@@ -616,8 +794,34 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     });
   },
 
+  refreshFirebaseSharedSource: async (sourceId, suppliedDocument) => {
+    const source = get().sharedSources.find((item) => item.id === sourceId && item.backend === "firebase");
+    if (!source) return;
+    const document = suppliedDocument === undefined ? await getFirebaseVault(source.fileId) : suppliedDocument;
+    if (!document) {
+      get().removeSharedSource(sourceId).catch(() => {});
+      return;
+    }
+    const revision = Number.parseInt(source.revision ?? "0", 10) || 0;
+    if (document.revision <= revision) return;
+    if (source.updatedAt && source.lastSyncAt && Date.parse(source.updatedAt) > Date.parse(source.lastSyncAt)) {
+      set({ syncError: `O compartilhamento "${source.name}" mudou em outro dispositivo enquanto havia alterações locais. Revise antes de sincronizar.` });
+      return;
+    }
+    const opened = await decryptVaultEnvelope(document.ciphertext, source.password);
+    const sharedVault = JSON.parse(opened.plaintext) as VaultData;
+    get().addSharedSource(source.fileId, sharedVault, source.password, String(document.revision), {
+      dataKey: opened.dataKey,
+      keySlots: opened.keySlots,
+    }, "firebase");
+  },
+
   // Mantido por compatibilidade com forceSync — delega para pollDriveChanges
   refreshSharedSources: async () => {
+    const firebaseSources = get().sharedSources.filter((source) => source.backend === "firebase");
+    for (const source of firebaseSources) {
+      await get().refreshFirebaseSharedSource(source.id);
+    }
     return get().pollDriveChanges();
   },
 
@@ -628,7 +832,8 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
    */
   pollDriveChanges: async () => {
     const { sharedSources, driveFileId, driveChangesToken } = get();
-    const hasAnything = sharedSources.length > 0 || !!driveFileId;
+    const driveSources = sharedSources.filter((source) => source.backend !== "firebase");
+    const hasAnything = driveSources.length > 0 || !!driveFileId;
     if (!hasAnything) return false;
 
     let authToken: GoogleToken;
@@ -669,7 +874,7 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     }
 
     // ── Verificar fontes compartilhadas ──────────────────────────────────────
-    for (const source of sharedSources) {
+    for (const source of driveSources) {
       if (!changedFileIds.includes(source.fileId)) continue;
       try {
         const encrypted = await downloadVaultFile(authToken, source.fileId);
@@ -773,7 +978,6 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
   syncSharedSource: async (sourceId) => {
     const source = get().sharedSources.find((item) => item.id === sourceId);
     if (!source || source.role === "reader") return;
-    const token = await get().ensureValidToken();
     const groups = source.groups.map(({ sourceGroupId, sharedSourceId, ...group }) => ({
       ...group,
       id: sourceGroupId ?? group.id,
@@ -810,11 +1014,23 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
       encrypted = await encryptData(JSON.stringify(sharedVault), source.password);
     }
 
-    await uploadVaultFile(token, encrypted, source.fileId);
-    const revision = await getFileVersion(token, source.fileId);
+    let revision: string;
+    if (source.backend === "firebase") {
+      const nextRevision = await updateFirebaseVault(
+        source.fileId,
+        encrypted,
+        Number.parseInt(source.revision ?? "0", 10) || undefined,
+      );
+      revision = String(nextRevision);
+    } else {
+      const token = await get().ensureValidToken();
+      await uploadVaultFile(token, encrypted, source.fileId);
+      revision = await getFileVersion(token, source.fileId);
+    }
+    const syncedAt = now();
     set((s) => ({
       sharedSources: s.sharedSources.map((item) => item.id === sourceId
-        ? { ...item, revision, lastSyncAt: now(), updatedBy: get().userInfo?.email, updatedAt: now() }
+        ? { ...item, revision, lastSyncAt: syncedAt, updatedBy: get().userInfo?.email, updatedAt: syncedAt }
         : item),
     }));
   },
@@ -824,8 +1040,12 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     if (!source) return;
     if (cancelForEveryone) {
       if (source.role !== "owner") throw new Error("Apenas o proprietário pode cancelar para todos.");
-      const token = await get().ensureValidToken();
-      await deleteDriveFile(token, source.fileId);
+      if (source.backend === "firebase") {
+        await deleteFirebaseVault(source.fileId);
+      } else {
+        const token = await get().ensureValidToken();
+        await deleteDriveFile(token, source.fileId);
+      }
     }
     set((s) => ({
       dismissedShareFileIds: Array.from(new Set([...s.dismissedShareFileIds, source.fileId])),
@@ -892,7 +1112,14 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
       const encrypted = await get().getEncryptedVault();
       await writeVaultFile(savePath, encrypted);
       savePersisted("pk_local_vault_path", savePath);
-      set({ localVaultPath: savePath, isDirty: false, lastSyncAt: now(), isSyncing: false });
+      const state = get();
+      let firebaseVaultMap = state.firebaseVaultMap;
+      if (state.firebaseVaultId) {
+        const link = { id: state.firebaseVaultId, revision: state.firebaseRevision };
+        firebaseVaultMap = { ...firebaseVaultMap, [`local:${savePath}`]: link };
+        savePersisted("pk_firebase_vault_map", firebaseVaultMap);
+      }
+      set({ localVaultPath: savePath, firebaseVaultMap, isDirty: false, lastSyncAt: now(), isSyncing: false });
     } catch (err) {
       set({ syncError: String(err), isSyncing: false });
       throw err;
@@ -902,7 +1129,22 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
   // Persiste apenas o path sem reescrever o arquivo (usado após abrir um cofre existente)
   persistLocalVaultPath: (path: string) => {
     savePersisted("pk_local_vault_path", path);
-    set({ localVaultPath: path });
+    const state = get();
+    const link = state.firebaseVaultMap[`local:${path}`]
+      ?? (state.driveFileId ? state.firebaseVaultMap[`drive:${state.driveFileId}`] : undefined);
+    let firebaseVaultMap = state.firebaseVaultMap;
+    if (link && !state.firebaseVaultMap[`local:${path}`]) {
+      firebaseVaultMap = { ...state.firebaseVaultMap, [`local:${path}`]: link };
+      savePersisted("pk_firebase_vault_map", firebaseVaultMap);
+    }
+    savePersisted("pk_firebase_vault_id", link?.id ?? null);
+    savePersisted("pk_firebase_revision", link?.revision ?? null);
+    set({
+      localVaultPath: path,
+      firebaseVaultMap,
+      firebaseVaultId: link?.id ?? null,
+      firebaseRevision: link?.revision ?? null,
+    });
   },
 
   loadFromLocalFile: async (path) => {
@@ -951,6 +1193,7 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
       if (isDirty && !isOwnerOfCollabVault) {
         if (localVaultPath || isAndroid) await get().saveToLocalFile(localVaultPath ?? undefined);
         if (googleToken) await get().syncToCloud();
+        if (get().firebaseVaultId) await get().syncToFirebase();
       }
       // Propagate owner's vault changes to all owned shared sources
       get().syncOwnedSharedSourcesFromVault();
@@ -983,11 +1226,81 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
       const revision = await getFileVersion(token, newFileId);
       savePersisted("pk_drive_revision", revision);
       savePersisted("pk_drive_file_id", newFileId);
-      set({ driveFileId: newFileId, driveRevision: revision, isDirty: false, lastSyncAt: now(), isSyncing: false });
+      let firebaseVaultMap = get().firebaseVaultMap;
+      if (get().firebaseVaultId) {
+        firebaseVaultMap = {
+          ...firebaseVaultMap,
+          [`drive:${newFileId}`]: { id: get().firebaseVaultId!, revision: get().firebaseRevision },
+        };
+        savePersisted("pk_firebase_vault_map", firebaseVaultMap);
+      }
+      set({ driveFileId: newFileId, driveRevision: revision, firebaseVaultMap, isDirty: false, lastSyncAt: now(), isSyncing: false });
     } catch (err) {
       set({ syncError: String(err), isSyncing: false });
       throw err;
     }
+  },
+
+  syncToFirebase: async () => {
+    const { firebaseVaultId, vault, masterPassword, userInfo } = get();
+    if (!firebaseVaultId || !vault || !masterPassword) return;
+    if (vault.collaboration) throw new Error("Cofres colaborativos do Drive ainda não podem ser sincronizados com Firebase.");
+    set({ isSyncing: true, syncError: null });
+    try {
+      const token = await get().ensureValidToken();
+      const identity = await signInFirebaseWithGoogleToken(token.access_token);
+      set({ firebaseAuthenticated: true });
+      if (userInfo?.email && identity.email && userInfo.email.toLowerCase() !== identity.email.toLowerCase()) {
+        throw new Error("A conta Firebase não corresponde à conta Google deste cofre.");
+      }
+      const current = await getFirebaseVault(firebaseVaultId);
+      if (!current || !current.memberUids.includes(identity.uid)) {
+        throw new Error("A conta Firebase não tem acesso ao cofre migrado.");
+      }
+      const encrypted = await get().getEncryptedVault();
+      const revision = await updateFirebaseVault(
+        firebaseVaultId,
+        encrypted,
+        get().firebaseRevision ?? current.revision,
+      );
+      get().setFirebaseVaultId(firebaseVaultId, revision);
+      set({ firebaseRevision: revision, isDirty: false, lastSyncAt: now(), isSyncing: false });
+    } catch (err) {
+      set({ syncError: String(err), isSyncing: false });
+      throw err;
+    }
+  },
+
+  applyFirebaseVaultSnapshot: async (document) => {
+    if (!document) return;
+    const { firebaseRevision, isDirty, masterPassword } = get();
+    if (firebaseRevision !== null && document.revision <= firebaseRevision) return;
+    if (!masterPassword) return;
+    if (isDirty) {
+      set({ syncError: "O cofre Firebase mudou em outro dispositivo. Sincronize antes de salvar para evitar sobrescrever alterações." });
+      return;
+    }
+    const opened = await decryptVaultEnvelope(document.ciphertext, masterPassword);
+    const raw = JSON.parse(opened.plaintext) as Partial<VaultData>;
+    const vault: VaultData = {
+      ...raw,
+      name: raw.name ?? "Meu cofre",
+      version: raw.version ?? "1",
+      owner: raw.owner ?? "",
+      sharedWith: raw.sharedWith ?? [],
+      deletionRequests: raw.deletionRequests ?? [],
+      groups: raw.groups ?? [],
+      entries: raw.entries ?? [],
+    };
+    if (get().firebaseVaultId) get().setFirebaseVaultId(get().firebaseVaultId, document.revision);
+    set({
+      vault,
+      vaultDataKey: opened.dataKey,
+      vaultKeySlots: opened.keySlots,
+      firebaseRevision: document.revision,
+      isDirty: true,
+      syncError: null,
+    });
   },
 
   loadFromCloud: async () => {
@@ -1242,9 +1555,13 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     if (!sharePassword) throw new Error("Senha de compartilhamento é obrigatória");
 
     const token = await get().ensureValidToken();
+    const identity = await signInFirebaseWithGoogleToken(token.access_token);
     const collaborator = collaboratorEmail.trim().toLowerCase();
     const documentId = generateId();
-    const fileName = `pk-collab-${documentId}.keep`;
+    const ownerEmail = identity.email?.trim().toLowerCase();
+    if (!ownerEmail || (userInfo?.email && ownerEmail !== userInfo.email.trim().toLowerCase())) {
+      throw new Error("A conta Firebase não corresponde à conta Google deste cofre.");
+    }
 
     // ── Montar VaultData do documento compartilhado ────────────────────────
     const collaboration = {
@@ -1290,24 +1607,23 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     const keySlots: VaultKeySlot[] = [ownerSlot, collabSlot];
     const encrypted = await encryptVaultEnvelope(JSON.stringify(sharedVault), dataKey, keySlots);
 
-    // ── Fazer upload do arquivo colaborativo ─────────────────────────────
-    const fileId = await createSharedVaultFile(token, encrypted, fileName);
-
-    // ── Compartilhar via Drive API ────────────────────────────────────────
-    await shareFile(
-      token,
-      fileId,
-      collaborator,
-      collaboratorRole === "reader" ? "reader" : "writer",
-      `Você recebeu acesso ao cofre de senhas "${targetTitle}". Abra o app Password Keeper e use a opção "Abrir compartilhamento" com a senha fornecida pelo proprietário.`,
-    );
-
-    // ── Registrar SharedSource no estado local (proprietário) ─────────────
-    const revision = await getFileVersion(token, fileId);
-    get().addSharedSource(fileId, sharedVault, ownerPassword, revision, { dataKey, keySlots });
-
-    // ── Inicializar changesToken se ainda não temos ────────────────────────
-    await get().initDriveChangesToken();
+    await createFirebaseVault(documentId, encrypted, {
+      ownerUid: identity.uid,
+      memberUids: [identity.uid],
+      editorUids: [],
+      ownerEmail,
+      memberEmails: [collaborator],
+      editorEmails: collaboratorRole === "reader" ? [] : [collaborator],
+      kind: "collaboration",
+      collaboration,
+    });
+    const created = await getFirebaseVault(documentId);
+    if (!created || created.ciphertext !== encrypted || !created.memberEmails?.includes(collaborator)) {
+      throw new Error("O compartilhamento Firebase não passou na verificação.");
+    }
+    get().addSharedSource(documentId, sharedVault, ownerPassword, String(created.revision), { dataKey, keySlots }, "firebase");
+    get().updateSharedUserRole(collaborator, collaboratorRole, targetType, targetId ?? undefined, targetTitle);
+    return documentId;
   },
 
   updateSharedUserRole: (email, role, scopeType = "vault", scopeId, scopeTitle) => {
@@ -1325,6 +1641,22 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
         : [...s.vault.sharedWith, { email: normalizedEmail, role, scopeType, scopeId, scopeTitle, addedAt: now() }];
       return { vault: { ...s.vault, sharedWith }, isDirty: true };
     });
+    const sources = get().sharedSources.filter((source) => source.backend === "firebase" && source.role === "owner"
+      && source.sharedWith.some((user) => user.email.toLowerCase() === normalizedEmail
+        && (user.scopeType ?? "vault") === scopeType && (user.scopeId ?? "") === (scopeId ?? "")));
+    for (const source of sources) {
+      const sharedWith = source.sharedWith.map((user) => user.email.toLowerCase() === normalizedEmail
+        && (user.scopeType ?? "vault") === scopeType && (user.scopeId ?? "") === (scopeId ?? "")
+        ? { ...user, role }
+        : user);
+      set((s) => ({ sharedSources: s.sharedSources.map((item) => item.id === source.id ? { ...item, sharedWith } : item) }));
+      const members = [source.owner, ...sharedWith.map((user) => user.email)];
+      const editors = sharedWith.filter((user) => user.role !== "reader").map((user) => user.email);
+      updateFirebaseShareAccess(source.fileId, members, editors).then((revision) => {
+        set((s) => ({ sharedSources: s.sharedSources.map((item) => item.id === source.id ? { ...item, revision: String(revision) } : item) }));
+        return get().syncSharedSource(source.id);
+      }).catch((error) => set({ syncError: String(error) }));
+    }
   },
 
   removeSharedUser: (email, scopeType, scopeId) => {
@@ -1343,6 +1675,20 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
         : s.vault,
       isDirty: true,
     }));
+    const sources = get().sharedSources.filter((source) => source.backend === "firebase" && source.role === "owner"
+      && source.sharedWith.some((user) => user.email.toLowerCase() === normalizedEmail
+        && (!scopeType || ((user.scopeType ?? "vault") === scopeType && (user.scopeId ?? "") === (scopeId ?? "")))));
+    for (const source of sources) {
+      const sharedWith = source.sharedWith.filter((user) => user.email.toLowerCase() !== normalizedEmail
+        || (scopeType && ((user.scopeType ?? "vault") !== scopeType || (user.scopeId ?? "") !== (scopeId ?? ""))));
+      set((s) => ({ sharedSources: s.sharedSources.map((item) => item.id === source.id ? { ...item, sharedWith } : item) }));
+      const members = [source.owner, ...sharedWith.map((user) => user.email)];
+      const editors = sharedWith.filter((user) => user.role !== "reader").map((user) => user.email);
+      updateFirebaseShareAccess(source.fileId, members, editors).then((revision) => {
+        set((s) => ({ sharedSources: s.sharedSources.map((item) => item.id === source.id ? { ...item, revision: String(revision) } : item) }));
+        return get().syncSharedSource(source.id);
+      }).catch((error) => set({ syncError: String(error) }));
+    }
   },
 
   selectGroup: (id) => set({ selectedGroupId: id, selectedEntryId: null, activeView: id ? "group" : "all" }),

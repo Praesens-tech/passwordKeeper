@@ -11,7 +11,7 @@ export function GoogleDriveModal({ onClose }: GoogleDriveModalProps) {
   const {
     googleToken, userInfo, driveFileId, isSyncing, lastSyncAt, syncError,
     setGoogleToken, setUserInfo, setDriveFileId,
-    syncToCloud, loadFromCloud, unlockVault, masterPassword, ensureValidToken,
+    syncToCloud, syncToFirebase, firebaseVaultId, loadFromCloud, unlockVault, masterPassword, ensureValidToken,
     initDriveChangesToken,
   } = useVaultStore();
 
@@ -45,12 +45,12 @@ export function GoogleDriveModal({ onClose }: GoogleDriveModalProps) {
       let token;
       if (googleToken) {
         try {
-          token = await withTimeout(ensureValidToken(), 125000);
+          token = await withTimeout(ensureValidToken(), 305000);
         } catch {
-          token = await withTimeout(startOAuthFlow(true), 125000);
+          token = await withTimeout(startOAuthFlow(true), 305000);
         }
       } else {
-        token = await withTimeout(startOAuthFlow(true), 125000);
+        token = await withTimeout(startOAuthFlow(true), 305000);
       }
       setGoogleToken(token);
       try {
@@ -86,7 +86,10 @@ export function GoogleDriveModal({ onClose }: GoogleDriveModalProps) {
 
   async function handleSync() {
     setError("");
-    try { await syncToCloud(); } catch (err) { setError(String(err)); }
+    try {
+      await syncToCloud();
+      if (firebaseVaultId) await syncToFirebase();
+    } catch (err) { setError(String(err)); }
   }
 
   async function handleLoad() {

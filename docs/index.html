@@ -6,7 +6,7 @@
     <title>Password Keeper | Gerenciador de senhas para PC e Android</title>
     <meta
       name="description"
-      content="Organize suas senhas em um cofre criptografado no seu dispositivo. Baixe o Password Keeper para Windows, Linux, macOS e Android, com Google Drive opcional."
+      content="Organize suas senhas em um cofre criptografado no seu dispositivo. Baixe o Password Keeper para Windows, Linux, macOS e Android. Sincronize o cofre pessoal pelo Google Drive e compartilhe pelo Firebase."
     />
     <meta property="og:title" content="Password Keeper | Suas senhas organizadas" />
     <meta name="robots" content="index,follow,max-image-preview:large" />
@@ -18,7 +18,7 @@
     <meta property="og:image:alt" content="Apresentação do Password Keeper para computador e Android" />
     <meta
       property="og:description"
-      content="Gerenciador de senhas com cofre local criptografado, grupos, busca e sincronização opcional pelo Google Drive."
+      content="Gerenciador de senhas com cofre local criptografado, grupos, busca, sincronização opcional pelo Google Drive e compartilhamento seguro via Firebase."
     />
     <meta property="og:type" content="website" />
     <link rel="canonical" href="https://passwordkeeper.praesens.tech/" />
@@ -27,7 +27,7 @@
     <meta property="og:image" content="https://passwordkeeper.praesens.tech/assets/password-keeper-hero.png" />
     <meta name="theme-color" content="#D85A30" />
     <link rel="icon" type="image/svg+xml" href="./assets/praesens_simbolo.svg" />
-    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "Password Keeper", "url": "https://passwordkeeper.praesens.tech/", "applicationCategory": "SecurityApplication", "operatingSystem": "Windows, macOS, Linux, Android", "description": "Gerenciador de senhas com cofre local criptografado, grupos, favoritos, busca e sincronização opcional pelo Google Drive.", "image": "https://passwordkeeper.praesens.tech/assets/interface-organizacao.png", "publisher": {"@type": "Organization", "name": "Praesens.tech"}, "downloadUrl": "https://passwordkeeper.praesens.tech/#downloads", "featureList": ["Cofre local criptografado", "Grupos e favoritos", "Busca de credenciais", "Gerador de senhas", "Sincronização opcional pelo Google Drive"]}</script>
+    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "Password Keeper", "url": "https://passwordkeeper.praesens.tech/", "applicationCategory": "SecurityApplication", "operatingSystem": "Windows, macOS, Linux, Android", "description": "Gerenciador de senhas com cofre local criptografado, grupos, favoritos, busca, sincronização opcional pelo Google Drive e compartilhamento seguro via Firebase.", "image": "https://passwordkeeper.praesens.tech/assets/interface-organizacao.png", "publisher": {"@type": "Organization", "name": "Praesens.tech"}, "downloadUrl": "https://passwordkeeper.praesens.tech/#downloads", "featureList": ["Cofre local criptografado", "Grupos e favoritos", "Busca de credenciais", "Gerador de senhas", "Sincronização opcional pelo Google Drive", "Compartilhamento cifrado via Firebase"]}</script>
     <link rel="sitemap" type="application/xml" href="./sitemap.xml" />
     <style>
       :root {
@@ -895,7 +895,7 @@
           <div>
             <h2 data-i18n="ctaTitle">Leve seu cofre para onde trabalha.</h2>
             <p data-i18n="ctaText">
-              Comece local, conecte o Drive quando precisar e compartilhe apenas o que faz sentido.
+              Comece local, sincronize seu cofre pessoal pelo Drive e compartilhe pelo Firebase.
             </p>
           </div>
           <a class="button primary" href="#downloads" data-i18n="ctaButton">Escolher download</a>
@@ -968,8 +968,8 @@
           proofOneText: "Proteção antes de salvar ou sincronizar.",
           proofTwoTitle: "4 sistemas",
           proofTwoText: "Linux, Windows, macOS e Android.",
-          proofThreeTitle: "Google Drive",
-          proofThreeText: "Sincronização via Google Drive.",
+          proofThreeTitle: "Firebase",
+          proofThreeText: "Compartilhamentos cifrados e sincronizados.",
           proofFourTitle: "Compartilhe",
           proofFourText: "Acesso por senha separada.",
           featuresTitle: "Feito para credenciais reais.",
@@ -983,7 +983,7 @@
           featureFourTitle: "Google Drive opcional",
           featureFourText: "Mantenha tudo local ou sincronize o arquivo criptografado entre seus dispositivos.",
           featureFiveTitle: "Colaboração segura",
-          featureFiveText: "Compartilhe um cofre, grupo ou entrada com permissão de leitura ou edição.",
+          featureFiveText: "Compartilhe cofre, grupo ou entrada pelo Firebase, com senha separada e permissão de leitura ou edição.",
           featureSixTitle: "Tudo em um só lugar",
           featureSixText: "Salve logins, sites, observações importantes e dados de acesso sem espalhar informações em planilhas ou mensagens.",
           securityTitle: "A senha mestra fica com você.",
@@ -993,7 +993,7 @@
           securityTwoStrong: "Bloqueio automático:",
           securityTwoText: "se você ficar um tempo sem usar, o cofre fecha sozinho.",
           securityThreeStrong: "Sincronização protegida:",
-          securityThreeText: "o Google Drive guarda apenas o arquivo criptografado, não suas senhas legíveis.",
+          securityThreeText: "Drive e Firebase recebem envelopes criptografados; o compartilhamento exige uma senha separada.",
           securityFourStrong: "Compartilhamento controlado:",
           securityFourText: "você escolhe o que compartilhar e se a outra pessoa pode apenas ver ou também editar.",
           architectureTitle: "Como funciona na prática.",
@@ -1024,7 +1024,7 @@
           historyCurrent: "Downloads para Windows, macOS, Linux e Android, com página simples para usuários finais.",
           historyPublished: "Versão publicada para Windows, macOS, Linux e Android.",
           ctaTitle: "Leve seu cofre para onde trabalha.",
-          ctaText: "Comece local, conecte o Drive quando precisar e compartilhe apenas o que faz sentido.",
+          ctaText: "Comece local, sincronize seu cofre pessoal pelo Drive e compartilhe pelo Firebase.",
           ctaButton: "Escolher download",
           footerText: "Cofre de senhas criptografado para desktop e Android."
         },
@@ -1066,8 +1066,8 @@
           proofOneText: "Protected before saving or syncing.",
           proofTwoTitle: "4 systems",
           proofTwoText: "Linux, Windows, macOS, and Android.",
-          proofThreeTitle: "Google Drive",
-          proofThreeText: "Sync through Google Drive.",
+          proofThreeTitle: "Firebase",
+          proofThreeText: "Encrypted sharing with live sync.",
           proofFourTitle: "Share",
           proofFourText: "Access with a separate password.",
           featuresTitle: "Built for real credentials.",
@@ -1081,7 +1081,7 @@
           featureFourTitle: "Optional Google Drive",
           featureFourText: "Keep everything local or sync the encrypted file across your devices.",
           featureFiveTitle: "Secure collaboration",
-          featureFiveText: "Share a vault, group, or entry with read or edit permission.",
+          featureFiveText: "Share a vault, group, or entry through Firebase with a separate password and read or edit access.",
           featureSixTitle: "Everything in one place",
           featureSixText: "Save logins, sites, important notes, and access details without spreading information across spreadsheets or messages.",
           securityTitle: "The master password stays with you.",
@@ -1091,7 +1091,7 @@
           securityTwoStrong: "Auto-lock:",
           securityTwoText: "the vault closes by itself after a period without use.",
           securityThreeStrong: "Protected sync:",
-          securityThreeText: "Google Drive stores only the encrypted file, not readable passwords.",
+          securityThreeText: "Drive and Firebase receive encrypted envelopes; sharing also requires a separate password.",
           securityFourStrong: "Controlled sharing:",
           securityFourText: "you choose what to share and whether the other person can only view or also edit.",
           architectureTitle: "How it works in practice.",
@@ -1122,7 +1122,7 @@
           historyCurrent: "Downloads for Windows, macOS, Linux, and Android, with a simpler page for everyday users.",
           historyPublished: "Published version for Windows, macOS, Linux, and Android.",
           ctaTitle: "Take your vault where you work.",
-          ctaText: "Start local, connect Drive when needed, and share only what makes sense.",
+          ctaText: "Start locally, sync your personal vault with Drive, and share through Firebase.",
           ctaButton: "Choose download",
           footerText: "Encrypted password vault for desktop and Android."
         }

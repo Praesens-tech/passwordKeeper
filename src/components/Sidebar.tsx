@@ -462,7 +462,9 @@ export function Sidebar({ onAddEntry, onForceSync, isForceSyncing }: SidebarProp
             </h3>
             <p className="text-vault-textMuted text-sm mb-4">
               {confirmRemoveShare.all
-                ? "O arquivo colaborativo será removido do Drive e os outros usuários deixarão de sincronizar."
+                ? (sharedSources.find((source) => source.id === confirmRemoveShare.id)?.backend === "firebase"
+                    ? "O documento compartilhado será removido do Firebase e os outros usuários perderão acesso."
+                    : "O arquivo colaborativo será removido do Drive e os outros usuários deixarão de sincronizar.")
                 : "O compartilhamento será removido apenas deste dispositivo."}
             </p>
             <div className="flex gap-3">

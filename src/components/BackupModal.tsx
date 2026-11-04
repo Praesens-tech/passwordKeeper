@@ -15,7 +15,7 @@ type PanelStatus = "idle" | "loading" | "done" | "error";
 export function BackupModal({ onClose }: BackupModalProps) {
   const {
     getEncryptedVault, ensureValidToken,
-    driveFileId, googleToken, mergeFromVault, syncToCloud,
+    driveFileId, googleToken, firebaseVaultId, mergeFromVault, syncToCloud, syncToFirebase,
   } = useVaultStore();
 
   // Panel 1: export local copy
@@ -89,6 +89,7 @@ export function BackupModal({ onClose }: BackupModalProps) {
       setImportCount(count);
       setImportStep("done");
       if (googleToken) syncToCloud().catch(() => {});
+      if (firebaseVaultId) syncToFirebase().catch(() => {});
     } catch (err) {
       const msg = String(err);
       setImportError(

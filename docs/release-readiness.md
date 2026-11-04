@@ -10,8 +10,8 @@ Checklist para promover o Password Keeper de beta para versão pública (v1.0).
 - [x] Backend Tauri validado (`cargo check`)
 - [x] 28 testes automatizados passando (criptografia, compartilhamento, auto-lock, polling)
 - [x] Auditoria npm sem vulnerabilidades em dependências de produção (`npm audit --omit=dev`)
-- [x] Compartilhamento colaborativo com arquivo separado (pk-collab-*.keep, envelope multi-slot)
-- [x] Sincronização quasi-realtime via Drive Changes API (polling único de 5s)
+- [x] Compartilhamento colaborativo no Firebase/Firestore com envelope multi-slot e permissão por e-mail Google verificado
+- [x] Sincronização quasi-realtime do cofre pessoal via Drive Changes API; compartilhamentos usam listener Firestore
 - [x] Pipeline de segurança CI: npm audit + Gitleaks por PR; PR Gating Aikido no dashboard
 - [x] Workflow de release por tag `v*` configurado para Linux, Windows, macOS, Android
 
@@ -77,16 +77,16 @@ npm run tauri build
 - [ ] Criar cofre novo
 - [ ] Salvar local (`.keep`)
 - [ ] Abrir cofre local
-- [ ] Conectar Google Drive
-- [ ] Salvar no Drive
-- [ ] Fechar e reabrir do Drive
+- [ ] Conectar Google Drive para o cofre pessoal (opcional)
+- [ ] Salvar cofre pessoal no Drive
+- [ ] Fechar e reabrir cofre pessoal
 - [ ] Compartilhar entrada/grupo/cofre com outra conta
 - [ ] Abrir compartilhamento como colaborador (com sharePassword)
 - [ ] Editar como editor — verificar sync em até 5s no proprietário
 - [ ] Revogar compartilhamento
 - [ ] Trocar senha mestra — verificar que cofre reabre com nova senha
 - [ ] Auto-lock: aguardar 5 min sem interação — cofre deve bloquear
-- [ ] Testar em Android: OAuth, salvar, abrir, compartilhar
+- [ ] Testar em Android: OAuth, salvar, abrir e compartilhar via Firebase
 
 ---
 

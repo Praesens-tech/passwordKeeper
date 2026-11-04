@@ -15,16 +15,14 @@ Status: material preparado; submissão e aprovação pelo Google pendentes.
 ## Explicação técnica para a revisão
 
 Password Keeper is a desktop and Android password vault. Users can keep their
-vault locally or optionally connect their Google Drive for encrypted backup,
-sync and collaboration. Vault contents are encrypted on the user's device
-before upload. The master password is not sent to Google or to the developer.
-The app communicates directly with Google APIs from the user's device. There
-is no developer-operated server receiving vault contents or OAuth tokens.
+personal vault locally or optionally connect Google Drive for encrypted backup
+and sync. Vault contents are encrypted on the user's device before upload. The
+master password is not sent to Google, Firebase, or the developer.
 
-The current Drive integration discovers existing and shared `.keep` vault
-files, downloads encrypted vaults, saves changes, creates separate encrypted
-collaboration files, manages user-requested sharing permissions and polls the
-Drive Changes API. Email identifies the connected account and collaborators.
+The Drive integration discovers existing personal `.keep` vault files,
+downloads encrypted vaults, saves changes and polls the Drive Changes API.
+Password sharing uses Firebase Authentication and Firestore instead: the app
+stores a client-encrypted document and verified Google email access metadata.
 Google user data is used for these user-facing features, not advertising or
 general-purpose AI model training.
 
@@ -41,7 +39,7 @@ must be explicitly justified and approved; approval is not guaranteed.
 2. Tokens são persistidos no armazenamento de configuração Tauri no dispositivo.
 3. O app lê metadados e arquivos criptografados diretamente do Google Drive.
 4. Cofres são descriptografados em memória; gravações são criptografadas antes do envio.
-5. Convites enviam ao Google o e-mail e a permissão escolhidos pelo usuário.
+5. O Firebase recebe ciphertext, e-mails autorizados e papéis de acesso para documentos colaborativos.
 6. Desconectar remove o token local; revogação no Google e exclusão dos arquivos são ações separadas.
 7. A consulta de atualizações acessa o GitHub, sem incluir o conteúdo do cofre.
 

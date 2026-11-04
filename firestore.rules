@@ -1,0 +1,75 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /sharedVaults/{vaultId} {
+      function signedIn() {
+        return request.auth != null;
+      }
+
+      function documentExists() {
+        return exists(/databases/$(database)/documents/sharedVaults/$(vaultId));
+      }
+
+      function isMember() {
+        return signedIn() && documentExists() && (
+          request.auth.uid in resource.data.memberUids
+          || (
+            request.auth.token.email_verified == true
+            && 'memberEmails' in resource.data
+            && request.auth.token.email in resource.data.memberEmails
+          )
+        );
+      }
+
+      function isOwner() {
+        return signedIn() && request.auth.uid == resource.data.ownerUid;
+      }
+
+      function isEditor() {
+        return signedIn() && (
+          request.auth.uid in resource.data.editorUids
+          || (
+            request.auth.token.email_verified == true
+            && 'editorEmails' in resource.data
+            && request.auth.token.email in resource.data.editorEmails
+          )
+        );
+      }
+
+      allow create: if signedIn()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.auth.uid in request.resource.data.memberUids
+        && request.auth.token.email_verified == true
+        && request.resource.data.ownerEmail == request.auth.token.email
+        && request.auth.token.email in request.resource.data.memberEmails
+        && request.resource.data.keys().hasOnly([
+          'ciphertext', 'ownerUid', 'memberUids', 'editorUids', 'ownerEmail',
+          'memberEmails', 'editorEmails', 'kind', 'collaboration', 'revision', 'updatedAt'
+        ]);
+
+      // Authenticated clients may check an unused deterministic ID before a
+      // create-only transaction. This reveals existence only; contents remain
+      // readable by members.
+      allow read: if isMember()
+        || (signedIn() && !documentExists());
+
+      // Só o dono pode alterar membros/permissões. Editor altera apenas o envelope.
+      allow update: if isOwner()
+        || (isEditor()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'ciphertext', 'revision', 'updatedAt'
+          ])
+          && request.resource.data.ownerUid == resource.data.ownerUid
+          && request.resource.data.memberUids == resource.data.memberUids
+          && request.resource.data.editorUids == resource.data.editorUids
+          && request.resource.data.memberEmails == resource.data.memberEmails
+          && request.resource.data.editorEmails == resource.data.editorEmails
+          && request.resource.data.ownerEmail == resource.data.ownerEmail
+          && request.resource.data.kind == resource.data.kind
+          && request.resource.data.collaboration == resource.data.collaboration
+          && request.resource.data.revision == resource.data.revision + 1);
+
+      allow delete: if isOwner();
+    }
+  }
+}

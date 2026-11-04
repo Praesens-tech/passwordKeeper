@@ -322,7 +322,7 @@ async fn start_oauth(
     // ── Passo 1: recebe o redirect do Google (code) ───────────────────────────
 
     let (stream1, _) = tokio::time::timeout(
-        std::time::Duration::from_secs(120),
+        std::time::Duration::from_secs(300),
         listener.accept(),
     )
     .await

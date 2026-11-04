@@ -71,6 +71,7 @@ export interface VaultData {
 export interface SharedSource {
   id: string;
   fileId: string;
+  backend?: "drive" | "firebase";
   name: string;
   owner: string;
   role: VaultPermission;

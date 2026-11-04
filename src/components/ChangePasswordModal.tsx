@@ -4,7 +4,7 @@ import { useVaultStore } from "../store/vaultStore";
 import { measurePasswordStrength } from "../services/crypto";
 
 export function ChangePasswordModal({ onClose }: { onClose: () => void }) {
-  const { changePassword, saveToLocalFile, syncToCloud, localVaultPath, googleToken } = useVaultStore();
+  const { changePassword, saveToLocalFile, syncToCloud, syncToFirebase, firebaseVaultId, localVaultPath, googleToken } = useVaultStore();
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -31,6 +31,7 @@ export function ChangePasswordModal({ onClose }: { onClose: () => void }) {
       await changePassword(currentPassword, newPassword);
       if (localVaultPath) await saveToLocalFile(localVaultPath);
       if (googleToken) await syncToCloud();
+      if (firebaseVaultId) await syncToFirebase();
       setSuccess(true);
       setTimeout(onClose, 2000);
     } catch (err) {

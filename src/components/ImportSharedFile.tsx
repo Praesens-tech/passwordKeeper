@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { X, Share2, Lock, Check, AlertCircle, Eye, EyeOff, Loader2, RefreshCw, ArrowRight, FileKey } from "lucide-react";
 import { useVaultStore } from "../store/vaultStore";
-import { findAllVaultFiles, downloadVaultFile, getFileVersion } from "../services/googleDrive";
 import { decryptVaultEnvelope } from "../services/crypto";
 import { VaultData } from "../types/vault";
+import { getFirebaseVault, listFirebaseSharesForEmail } from "../services/firebase";
 
 interface ImportSharedFileProps {
   onClose: () => void;
@@ -11,10 +11,9 @@ interface ImportSharedFileProps {
 
 export function ImportSharedFile({ onClose }: ImportSharedFileProps) {
   const {
-    googleToken, userInfo, ensureValidToken, addSharedSource, initDriveChangesToken,
-    setDriveRevision,
+    googleToken, userInfo, ensureValidToken, authenticateFirebase, addSharedSource,
   } = useVaultStore();
-  const [files, setFiles] = useState<{ id: string; name: string }[]>([]);
+  const [files, setFiles] = useState<{ id: string; name: string; owner: string }[]>([]);
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [showPwd, setShowPwd] = useState(false);
@@ -26,12 +25,21 @@ export function ImportSharedFile({ onClose }: ImportSharedFileProps) {
     setLoading(true);
     setErrorMsg("");
     try {
-      const token = await ensureValidToken();
-      const result = await findAllVaultFiles(token);
-      setFiles(result);
+      await ensureValidToken();
+      const identity = await authenticateFirebase();
+      const email = identity.email?.trim().toLowerCase();
+      if (!email || (userInfo?.email && email !== userInfo.email.trim().toLowerCase())) {
+        throw new Error("A conta Firebase não corresponde à conta Google conectada no app.");
+      }
+      const result = await listFirebaseSharesForEmail(email);
+      setFiles(result.map((document) => ({
+        id: document.id,
+        name: document.collaboration?.title ?? "Compartilhamento",
+        owner: document.ownerEmail ?? "Proprietário",
+      })));
       setStep("pick");
     } catch (err) {
-      setErrorMsg(googleToken ? String(err) : "Conecte sua conta Google Drive primeiro.");
+      setErrorMsg(googleToken ? String(err) : "Conecte sua conta Google no app primeiro.");
       setStep("error");
     }
     setLoading(false);
@@ -42,27 +50,22 @@ export function ImportSharedFile({ onClose }: ImportSharedFileProps) {
     if (!selectedFileId || !password) return;
     setStep("opening");
     try {
-      const token = await ensureValidToken();
-      const encrypted = await downloadVaultFile(token, selectedFileId);
+      const document = await getFirebaseVault(selectedFileId);
+      if (!document) throw new Error("Compartilhamento não encontrado ou acesso revogado.");
 
       // Usar decryptVaultEnvelope para suportar v2 (envelope multi-slot) e legado
-      const opened = await decryptVaultEnvelope(encrypted, password);
+      const opened = await decryptVaultEnvelope(document.ciphertext, password);
       const remoteData = JSON.parse(opened.plaintext) as VaultData;
-      const revision = await getFileVersion(token, selectedFileId);
 
-      // Registrar como SharedSource — mantém o arquivo colaborativo separado
+      // Registrar o documento Firestore como uma fonte colaborativa separada.
       addSharedSource(
         selectedFileId,
         remoteData,
         password,
-        revision,
+        String(document.revision),
         { dataKey: opened.dataKey, keySlots: opened.keySlots },
+        "firebase",
       );
-
-      // Inicializar changesToken para receber atualizações em tempo real
-      await initDriveChangesToken();
-
-      setDriveRevision(revision);
       setStep("done");
       setTimeout(onClose, 800);
     } catch {
@@ -87,7 +90,7 @@ export function ImportSharedFile({ onClose }: ImportSharedFileProps) {
             </div>
             <div>
               <h2 className="text-vault-text font-semibold">Abrir compartilhamento</h2>
-              <p className="text-vault-textMuted text-sm">Abrir o arquivo principal compartilhado no Drive</p>
+              <p className="text-vault-textMuted text-sm">Acessar compartilhamentos Firebase da sua conta Google</p>
             </div>
           </div>
           <button onClick={onClose} className="text-vault-textMuted hover:text-vault-text transition-colors">
@@ -105,20 +108,20 @@ export function ImportSharedFile({ onClose }: ImportSharedFileProps) {
                 className="w-full py-2.5 bg-vault-sidebar border border-vault-border rounded-xl text-vault-textSecondary hover:text-vault-text text-sm transition-colors flex items-center justify-center gap-2"
               >
                 {loading ? <Loader2 size={15} className="animate-spin" /> : <RefreshCw size={15} />}
-                Atualizar cofres do Drive
+                Atualizar compartilhamentos
               </button>
 
               {loading ? (
                 <div className="text-center py-8 text-vault-textMuted text-sm">
                   <Loader2 size={24} className="animate-spin mx-auto mb-3" />
-                  Buscando no Google Drive...
+                  Buscando no Firebase...
                 </div>
               ) : files.length === 0 ? (
                 <div className="p-4 bg-vault-sidebar border border-vault-border rounded-xl text-center">
                   <Share2 size={32} className="text-vault-textMuted mx-auto mb-2" />
                   <p className="text-vault-textSecondary text-sm font-medium">Nenhum cofre encontrado</p>
                   <p className="text-vault-textMuted text-xs mt-1">
-                    O cofre aparece aqui depois que o proprietário compartilhar o arquivo principal com seu email Google.
+                    Os compartilhamentos destinados a este e-mail aparecem aqui após o proprietário criar o acesso.
                   </p>
                 </div>
               ) : (

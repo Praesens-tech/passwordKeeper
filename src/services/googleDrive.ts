@@ -193,18 +193,6 @@ export async function findAllVaultFiles(token: GoogleToken): Promise<{ id: strin
   return (data.files ?? []);
 }
 
-/** Returns collaborative .keep files shared with the user or owned by them. */
-export async function findAllCollaborativeVaultFiles(token: GoogleToken): Promise<{ id: string; name: string; ownerEmail?: string }[]> {
-  const headers = await authHeaders(token);
-  const query = encodeURIComponent(`name contains '.keep' and trashed=false`);
-  const res = await rustFetch("GET", `https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name,owners(emailAddress))&orderBy=modifiedTime desc`, headers);
-  if (!res.ok) throw new Error("Erro ao buscar compartilhamentos no Drive");
-  const data = res.json() as { files?: { id: string; name: string; owners?: { emailAddress?: string }[] }[] };
-  return (data.files ?? [])
-    .filter((file) => file.name.includes("pk-collab-"))
-    .map((file) => ({ id: file.id, name: file.name, ownerEmail: file.owners?.[0]?.emailAddress }));
-}
-
 export async function getFileVersion(token: GoogleToken, fileId: string): Promise<string> {
   const headers = await authHeaders(token);
   const res = await rustFetch("GET", `https://www.googleapis.com/drive/v3/files/${fileId}?fields=headRevisionId,modifiedTime`, headers);
@@ -279,26 +267,6 @@ export async function uploadVaultFile(
   }
 }
 
-export async function shareFile(
-  token: GoogleToken,
-  fileId: string,
-  email: string,
-  role: "reader" | "writer" = "reader",
-  emailMessage?: string,
-): Promise<void> {
-  const headers = await authHeaders(token);
-  const res = await rustFetch(
-    "POST",
-    `https://www.googleapis.com/drive/v3/files/${fileId}/permissions?sendNotificationEmail=true`,
-    { ...headers, "Content-Type": "application/json" },
-    JSON.stringify({ role, type: "user", emailAddress: email, ...(emailMessage ? { emailMessage } : {}) }),
-  );
-  if (!res.ok) {
-    const err = res.json() as { error?: { message?: string } };
-    throw new Error(err.error?.message ?? `Erro ao compartilhar arquivo (${res.status}): ${res.text()}`);
-  }
-}
-
 // ─── Drive Changes API (long-poll quasi-realtime) ─────────────────────────────
 
 /**
@@ -350,35 +318,4 @@ export async function listDriveChanges(
   // Google retorna newStartPageToken quando chegou ao fim da lista de mudanças
   const nextPageToken = data.newStartPageToken ?? data.nextPageToken ?? pageToken;
   return { changedFileIds, nextPageToken };
-}
-
-export async function createSharedVaultFile(
-  token: GoogleToken,
-  content: string,
-  fileName: string
-): Promise<string> {
-  const headers = await authHeaders(token);
-  const metadata = JSON.stringify({ name: fileName, mimeType: "application/octet-stream" });
-  const boundary = "vault_share_" + crypto.randomUUID().replace(/-/g, "");
-  const body = [
-    `--${boundary}`,
-    "Content-Type: application/json; charset=UTF-8",
-    "",
-    metadata,
-    `--${boundary}`,
-    "Content-Type: application/octet-stream",
-    "",
-    content,
-    `--${boundary}--`,
-  ].join("\r\n");
-
-  const res = await rustFetch(
-    "POST",
-    "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id",
-    { ...headers, "Content-Type": `multipart/related; boundary=${boundary}` },
-    body,
-  );
-  if (!res.ok) throw new Error(`Erro ao criar arquivo compartilhado (${res.status}): ${res.text()}`);
-  const data = res.json() as { id: string };
-  return data.id;
 }

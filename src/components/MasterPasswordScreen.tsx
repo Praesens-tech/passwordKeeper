@@ -6,9 +6,10 @@ import {
 import { usePlatform } from "../hooks/usePlatform";
 import { useVaultStore } from "../store/vaultStore";
 import {
-  findAllVaultFiles, findAllCollaborativeVaultFiles, downloadVaultFile,
+  findAllVaultFiles, downloadVaultFile,
   startOAuthFlow, getUserInfo, getFileVersion,
 } from "../services/googleDrive";
+import { getFirebaseVault, listFirebaseSharesForEmail } from "../services/firebase";
 import { decryptVaultEnvelope } from "../services/crypto";
 import { getMobileVaultPath, pickOpenPath, pickSavePath, readVaultFile } from "../services/localFile";
 import { PasswordEntry, PasswordGroup, VaultPermission } from "../types/vault";
@@ -62,7 +63,7 @@ export function MasterPasswordScreen() {
     googleToken, userInfo,
     setGoogleToken, setUserInfo, setDriveFileId, setDriveRevision,
     localVaultPath, ensureValidToken, dismissedShareFileIds, dismissShareFile,
-    addSharedSource, initDriveChangesToken, persistLocalVaultPath,
+    addSharedSource, initDriveChangesToken, persistLocalVaultPath, authenticateFirebase,
   } = useVaultStore();
 
   const [mode, setMode] = useState<ScreenMode>(
@@ -273,22 +274,16 @@ export function MasterPasswordScreen() {
   async function handleConnectForImport() {
     setError(""); setLoadingShareList(true);
     try {
-      let token = await connectGoogle("import");
-      setMode("import-pick");
-      let files = (await findAllCollaborativeVaultFiles(token))
-        .filter((file) => !dismissedShareFileIds.includes(file.id));
-      if (files.length === 0 && googleToken) {
-        token = await startOAuthFlow(false);
-        setGoogleToken(token);
-        try {
-          const info = await getUserInfo(token.access_token);
-          setUserInfo(info);
-        } catch {
-          setUserInfo(null);
-        }
-        files = (await findAllCollaborativeVaultFiles(token))
-          .filter((file) => !dismissedShareFileIds.includes(file.id));
+      await connectGoogle("import");
+      const identity = await authenticateFirebase();
+      const email = identity.email?.trim().toLowerCase();
+      if (!email || (userInfo?.email && email !== userInfo.email.trim().toLowerCase())) {
+        throw new Error("A conta Firebase não corresponde à conta Google conectada no app.");
       }
+      setMode("import-pick");
+      let files = (await listFirebaseSharesForEmail(email))
+        .map((document) => ({ id: document.id, name: document.collaboration?.title ?? "Compartilhamento", ownerEmail: document.ownerEmail }))
+        .filter((file) => !dismissedShareFileIds.includes(file.id));
       setShareFiles(files);
     } catch (err) { setError(friendlyError(err)); setMode("choose"); }
     setLoadingShareList(false);
@@ -301,21 +296,20 @@ export function MasterPasswordScreen() {
     if (!selectedShareFileId) { setError("Selecione um compartilhamento"); return; }
     setLoading(true);
     try {
-      const token = await ensureValidToken();
-      const encrypted = await downloadVaultFile(token, selectedShareFileId);
+      await ensureValidToken();
+      const document = await getFirebaseVault(selectedShareFileId);
+      if (!document) throw new Error("Compartilhamento não encontrado ou acesso revogado.");
 
       // Decriptar para extrair as entradas e levá-las para o destino escolhido
-      const opened = await decryptVaultEnvelope(encrypted, shareUnlockPwd);
+      const opened = await decryptVaultEnvelope(document.ciphertext, shareUnlockPwd);
       const remoteData = JSON.parse(opened.plaintext) as { entries?: unknown[]; groups?: unknown[]; owner?: string; collaboration?: unknown; sharedWith?: unknown[] };
-      const revision = await getFileVersion(token, selectedShareFileId);
-      setDriveRevision(revision);
 
       // Identificar grupo e entradas do compartilhamento para o fluxo de importação
       const groups = (remoteData.groups ?? []) as import("../types/vault").PasswordGroup[];
       const entries = (remoteData.entries ?? []) as import("../types/vault").PasswordEntry[];
       const group = groups.length === 1 ? groups[0] : null;
       const role = (remoteData.sharedWith as import("../types/vault").SharedUser[] | undefined)
-        ?.find((u) => useVaultStore.getState().userInfo?.email === u.email)?.role ?? "reader";
+        ?.find((u) => useVaultStore.getState().userInfo?.email?.toLowerCase() === u.email.toLowerCase())?.role ?? "reader";
 
       setPendingShare({ entries, group, role, sharedBy: remoteData.owner });
       setLoading(false);
@@ -426,7 +420,7 @@ export function MasterPasswordScreen() {
                 onClick={() => { reset(); handleConnectDrive(); }} />
               <OptionButton icon={<Share2 size={20} className="text-vault-primary" />} iconBg="bg-vault-primary/20"
                 title="Abrir compartilhamento"
-                subtitle="Abrir arquivo colaborativo compartilhado no Drive"
+                subtitle="Abrir convite compartilhado pelo Firebase"
                 onClick={() => { reset(); handleConnectForImport(); }} />
             </div>
           )}

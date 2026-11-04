@@ -39,6 +39,7 @@ export function ShareModal({ target, type, onClose }: ShareModalProps) {
   const [sharePassword, setSharePassword] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [copiedPwd, setCopiedPwd] = useState(false);
+  const [shareCode, setShareCode] = useState("");
 
   if (!vault) return null;
 
@@ -50,7 +51,7 @@ export function ShareModal({ target, type, onClose }: ShareModalProps) {
     if (!email.trim() || !sharePassword) return;
     setStep("sharing");
     try {
-      await createSharedDocument({
+      const code = await createSharedDocument({
         targetType: type,
         targetId: target?.id ?? null,
         targetTitle: title,
@@ -58,6 +59,7 @@ export function ShareModal({ target, type, onClose }: ShareModalProps) {
         collaboratorRole: role,
         sharePassword,
       });
+      setShareCode(code);
       setStep("done");
     } catch (err) {
       setErrorMsg(String(err));
@@ -107,7 +109,7 @@ export function ShareModal({ target, type, onClose }: ShareModalProps) {
                 <div className="p-3 bg-vault-warning/10 border border-vault-warning/30 rounded-xl flex items-start gap-2">
                   <AlertCircle size={16} className="text-vault-warning mt-0.5 flex-shrink-0" />
                   <p className="text-sm text-vault-warning">
-                    Conecte ao Google Drive primeiro para compartilhar.
+                    Conecte sua conta Google primeiro para compartilhar pelo Firebase.
                   </p>
                 </div>
               )}
@@ -194,7 +196,7 @@ export function ShareModal({ target, type, onClose }: ShareModalProps) {
 
               {/* Info box */}
               <div className="p-3 bg-vault-sidebar border border-vault-border rounded-xl text-xs text-vault-textMuted leading-relaxed">
-                Um arquivo separado e criptografado será criado no Drive. O destinatário abre esse arquivo com a senha de compartilhamento e vê apenas o escopo permitido. Seu cofre principal não é alterado.
+                Uma cópia criptografada será criada no Firebase. O destinatário encontra o compartilhamento ao entrar com este e-mail Google e precisa da senha de compartilhamento para abrir. Seu cofre principal não é alterado.
               </div>
 
               <div className="flex gap-3 pt-2">
@@ -216,7 +218,7 @@ export function ShareModal({ target, type, onClose }: ShareModalProps) {
             <div className="text-center py-8">
               <div className="w-12 h-12 rounded-full border-2 border-vault-primary border-t-transparent animate-spin mx-auto mb-4" />
               <p className="text-vault-text font-medium">Criando compartilhamento...</p>
-              <p className="text-vault-textMuted text-sm mt-1">Criptografando e enviando ao Google Drive</p>
+              <p className="text-vault-textMuted text-sm mt-1">Criptografando e salvando no Firebase</p>
             </div>
           )}
 
@@ -231,6 +233,18 @@ export function ShareModal({ target, type, onClose }: ShareModalProps) {
                   <strong className="text-vault-text">{email}</strong> recebeu acesso como{" "}
                   <strong className="text-vault-primary">{selectedRoleOption.label}</strong>.
                 </p>
+              </div>
+              <div className="p-3 bg-vault-sidebar border border-vault-border rounded-xl text-left">
+                <p className="text-sm text-vault-textSecondary font-medium mb-1">Código do compartilhamento</p>
+                <div className="flex items-center gap-2">
+                  <code className="text-vault-textMuted font-mono text-xs break-all flex-1">{shareCode}</code>
+                  <button
+                    onClick={() => copyToClipboard(shareCode, { clearAfterMs: 30000, showNotification: false })}
+                    className="p-2 text-vault-textMuted hover:text-vault-text"
+                    title="Copiar código"
+                  ><Copy size={15} /></button>
+                </div>
+                <p className="text-xs text-vault-textMuted mt-2">A pessoa verá o item em “Compartilhados” ao conectar este e-mail no app.</p>
               </div>
               <div className="p-3 bg-vault-warning/10 border border-vault-warning/30 rounded-xl text-left">
                 <p className="text-sm text-vault-warning font-medium mb-1">Senha de compartilhamento:</p>
