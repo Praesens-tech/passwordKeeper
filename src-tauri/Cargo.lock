@@ -2573,7 +2573,7 @@ dependencies = [
 
 [[package]]
 name = "password-keeper"
-version = "0.3.0-6"
+version = "0.3.1"
 dependencies = [
  "base64 0.22.1",
  "jni",
