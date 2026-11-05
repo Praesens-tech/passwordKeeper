@@ -27,22 +27,8 @@ writeFileSync(lockPath, JSON.stringify(lock, null, 2) + "\n");
 const confPath = join(__dirname, "..", "src-tauri", "tauri.conf.json");
 const conf = JSON.parse(readFileSync(confPath, "utf8"));
 conf.version = version;
-writeFileSync(confPath, JSON.stringify(conf, null, 2) + "\n");
-console.log("tauri.conf.json →", version);
-
-// Android's Gradle project reads its package version from this generated file.
-// Keep versionCode monotonic across pre-releases and the final release:
-// 0.3.0-3 => 300003, 0.3.0 => 300099, 0.3.1-1 => 300101.
-const androidPropertiesPath = join(
-  __dirname,
-  "..",
-  "src-tauri",
-  "gen",
-  "android",
-  "app",
-  "tauri.properties",
-);
-let androidProperties = readFileSync(androidPropertiesPath, "utf8");
+// Keep Android's versionCode monotonic across numeric pre-releases and stable
+// releases: 0.3.0-3 => 300003, 0.3.0 => 300099, 0.3.1-1 => 300101.
 const versionMatch = version.match(/^(\d+)\.(\d+)\.(\d+)(?:-(\d+))?/);
 if (!versionMatch) {
   throw new Error(`Versão Android inválida: ${version}`);
@@ -56,10 +42,11 @@ const androidVersionCode =
 if (!Number.isSafeInteger(androidVersionCode) || androidVersionCode > 2_100_000_000) {
   throw new Error(`versionCode Android fora do limite: ${androidVersionCode}`);
 }
-androidProperties = androidProperties
-  .replace(/^tauri\.android\.versionName=.*$/m, `tauri.android.versionName=${version}`)
-  .replace(/^tauri\.android\.versionCode=.*$/m, `tauri.android.versionCode=${androidVersionCode}`);
-writeFileSync(androidPropertiesPath, androidProperties);
+conf.bundle ??= {};
+conf.bundle.android ??= {};
+conf.bundle.android.versionCode = androidVersionCode;
+writeFileSync(confPath, JSON.stringify(conf, null, 2) + "\n");
+console.log("tauri.conf.json →", version);
 console.log(`Android → ${version} (versionCode ${androidVersionCode})`);
 
 // Cargo.toml — atualiza apenas a primeira linha `version = "..."`
