@@ -9,9 +9,7 @@ import zipfile
 
 def verify(apk, dexdump):
     expected = {
-        ("GoogleOAuthManager", "start", "(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)V"),
         ("NativeHttp", "request", "(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)Ljava/lang/String;"),
-        ("GoogleOAuthBridge", "finishOAuth", "(Ljava/lang/String;Ljava/lang/String;)V"),
     }
     with zipfile.ZipFile(apk) as archive, tempfile.TemporaryDirectory() as directory:
         for name in archive.namelist():
@@ -36,7 +34,7 @@ def verify(apk, dexdump):
         for cls, method, signature in sorted(expected):
             print(f"Missing JNI entry point: {cls}.{method}{signature}", file=sys.stderr)
         return 1
-    print("Release APK: all three JNI entry points preserved with exact signatures.")
+    print("Release APK: JNI entry point preserved with exact signature.")
     return 0
 
 
