@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Cloud, LogOut, X, Loader2, ShieldCheck, KeyRound } from "lucide-react";
+import { Cloud, LogOut, X, Loader2, ShieldCheck, KeyRound, Trash2 } from "lucide-react";
+import { invoke } from "@tauri-apps/api/core";
 import { useVaultStore } from "../store/vaultStore";
 
 export function FirebaseAccountModal({ onClose }: { onClose: () => void }) {
@@ -11,6 +12,10 @@ export function FirebaseAccountModal({ onClose }: { onClose: () => void }) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+
+  async function openAccountDeletion() {
+    await invoke("open_url", { url: "https://passwordkeeper.praesens.tech/excluir-conta.html" });
+  }
 
   async function submit() {
     setBusy(true); setError(""); setMessage("");
@@ -75,6 +80,9 @@ export function FirebaseAccountModal({ onClose }: { onClose: () => void }) {
         {message && <p role="status" className="rounded-lg bg-vault-success/10 p-2.5 text-xs text-vault-success">{message}</p>}
         <button onClick={submit} disabled={busy || !email || !password} className="flex w-full items-center justify-center gap-2 rounded-xl bg-vault-primary py-2.5 font-medium text-vault-bg disabled:opacity-50">{busy ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />}{mode === "create" ? "Criar conta e enviar confirmação" : "Entrar"}</button>
       </div>}
+      <button type="button" onClick={() => void openAccountDeletion()} className="mt-4 flex w-full items-center justify-center gap-2 border-t border-vault-border pt-3 text-xs text-vault-textMuted hover:text-vault-danger">
+        <Trash2 size={13} />Solicitar exclusão da conta e dos dados
+      </button>
     </section>
   </div>;
 }

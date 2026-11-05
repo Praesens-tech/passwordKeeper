@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Plus, FolderOpen, Cloud, FileKey, ArrowRight, Loader2 } from "lucide-react";
+import { invoke } from "@tauri-apps/api/core";
 import { usePlatform } from "../hooks/usePlatform";
 import { useVaultStore } from "../store/vaultStore";
 import { getMobileVaultPath, pickOpenPath, pickSavePath, readVaultFile } from "../services/localFile";
@@ -70,6 +71,10 @@ export function MasterPasswordScreen() {
     finally { setBusy(false); }
   }
 
+  async function openAccountDeletion() {
+    await invoke("open_url", { url: "https://passwordkeeper.praesens.tech/excluir-conta.html" });
+  }
+
   const inputClass = "mt-1 w-full rounded-xl border border-vault-border bg-vault-input px-3 py-3 text-sm text-vault-text placeholder-vault-textMuted focus:border-vault-primary focus:outline-none";
   const buttonClass = "flex w-full items-center justify-center gap-2 rounded-xl bg-vault-primary py-3 font-semibold text-vault-bg disabled:opacity-40";
   const option = (icon: React.ReactNode, title: string, subtitle: string, click: () => void) =>
@@ -114,6 +119,7 @@ export function MasterPasswordScreen() {
           {error && <ErrorMessage>{error}</ErrorMessage>}{notice && <p role="status" className="rounded-lg bg-vault-success/10 p-2.5 text-xs text-vault-success">{notice}</p>}
           <button disabled={busy || (!useVaultStore.getState().firebaseAccount && (!accountEmail || !accountPassword)) || (!createAccount && !masterPwd)} className={buttonClass}>{busy ? <Loader2 size={17} className="animate-spin" /> : <Cloud size={17} />}{createAccount ? "Criar conta" : "Entrar e restaurar"}</button>
           {!useVaultStore.getState().firebaseAccount && <button type="button" onClick={() => { setCreateAccount(!createAccount); setError(""); setNotice(""); }} className="w-full text-xs text-vault-textMuted">{createAccount ? "Já tenho uma conta" : "Criar conta nova"}</button>}
+          <button type="button" onClick={() => void openAccountDeletion()} className="w-full text-xs text-vault-textMuted hover:text-vault-danger">Solicitar exclusão da conta e dos dados</button>
           <p className="text-center text-[11px] leading-relaxed text-vault-textMuted">A conta autoriza o acesso. A senha mestra descriptografa o cofre e nunca sai do dispositivo.</p>
         </form>}
       </section>

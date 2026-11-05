@@ -37,9 +37,22 @@ Checklist para promover o Password Keeper de beta para versão pública (v1.0).
 - [x] Habilitar Firebase Authentication por e-mail/senha e publicar regras Firestore
 - [ ] Configurar política Firebase de senha forte no servidor
 - [ ] Ativar MFA TOTP no Firebase Authentication com Identity Platform
-- [ ] Publicar política de privacidade
+- [x] Publicar política de privacidade
 - [ ] Publicar termos de uso
 - [ ] Página de suporte com e-mail de contato
+
+### Google Play
+
+- [x] Pacote Android fixo: `com.passwordkeeper.vault`
+- [x] `targetSdk` configurado para API 36
+- [x] Página pública para solicitar exclusão da conta e dos dados
+- [x] Link para solicitar exclusão disponível no app durante criação e acesso à conta
+- [x] Workflow gera APK para instalação direta e AAB assinado para Google Play
+- [ ] Revisar continuidade da chave de assinatura no Play App Signing para atualizar instalações por APK
+- [ ] Criar o app no Play Console e enviar o AAB para teste interno
+- [ ] Para a conta pessoal criada em 2026: teste fechado com 12 participantes por 14 dias consecutivos
+- [ ] Preencher Data safety, App access, classificação indicativa e ficha da loja
+- [ ] Preparar capturas de tela Android para a ficha da loja
 
 ---
 

@@ -3,7 +3,7 @@
 #
 # Dispara quando uma tag "v*" é criada (ex: v1.0.0, v0.2.3).
 # Gera binários para: Linux (.AppImage + .deb), Windows (.msi + .exe),
-#                     macOS (.dmg) e Android (.apk).
+#                     macOS (.dmg) e Android (.apk + .aab para Play).
 #
 # Pré-requisito no repositório:
 #   Settings → Actions → General → Workflow permissions → Read and write permissions
@@ -139,7 +139,7 @@ jobs:
             | Windows | `.msi` ou `.exe` |
             | macOS Intel | `.dmg` (x86_64) |
             | macOS Apple Silicon | `.dmg` (aarch64) |
-            | Android | `.apk` (side-loading) |
+            | Android | `.apk` (instalação direta) e `.aab` (Google Play) |
 
             > Os arquivos aparecem abaixo em **Assets** após todos os builds concluírem.
           releaseDraft: true
@@ -246,6 +246,44 @@ jobs:
           ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.0.11902837
         run: npm run tauri android build -- --apk
 
+      - name: Build e assinar Android App Bundle para Google Play
+        shell: bash
+        env:
+          VITE_FIREBASE_API_KEY:          "${{ vars.VITE_FIREBASE_API_KEY }}"
+          VITE_FIREBASE_AUTH_DOMAIN:      "${{ vars.VITE_FIREBASE_AUTH_DOMAIN }}"
+          VITE_FIREBASE_PROJECT_ID:       "${{ vars.VITE_FIREBASE_PROJECT_ID }}"
+          VITE_FIREBASE_APP_ID:           "${{ vars.VITE_FIREBASE_APP_ID }}"
+          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.0.11902837
+          ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.0.11902837
+          ANDROID_KEY_ALIAS:      ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD:   ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          KEY_ALIAS="${ANDROID_KEY_ALIAS:-passwordkeeper}"
+          STORE_PASS="${ANDROID_STORE_PASSWORD:-android}"
+          KEY_PASS="${ANDROID_KEY_PASSWORD:-android}"
+          VERSION=$(echo "${{ github.ref_name }}" | tr -d 'v')
+
+          npm run tauri android build -- --aab
+
+          AAB=$(find src-tauri/gen/android/app/build/outputs/bundle \
+                  -name "*.aab" -type f | head -1)
+          if [ -z "$AAB" ]; then
+            echo "❌ Nenhum Android App Bundle encontrado em outputs/bundle"
+            find src-tauri/gen/android/app/build/outputs -name "*.aab" || true
+            exit 1
+          fi
+
+          FINAL="$GITHUB_WORKSPACE/PasswordKeeper-${VERSION}-android.aab"
+          jarsigner -keystore "$GITHUB_WORKSPACE/release.jks" \
+            -storepass "$STORE_PASS" -keypass "$KEY_PASS" \
+            -signedjar "$FINAL" "$AAB" "$KEY_ALIAS"
+          jarsigner -verify "$FINAL"
+
+          echo "✓ AAB assinado: $FINAL"
+          echo "AAB_PATH=$FINAL" >> "$GITHUB_ENV"
+          echo "AAB_NAME=PasswordKeeper-${VERSION}-android.aab" >> "$GITHUB_ENV"
+
       - name: Alinhar e assinar APK
         shell: bash
         run: |
@@ -299,6 +337,13 @@ jobs:
           path: ${{ env.APK_PATH }}
           retention-days: 1
 
+      - name: Salvar AAB como artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-aab
+          path: ${{ env.AAB_PATH }}
+          retention-days: 30
+
   # ── Publicar release ────────────────────────────────────────────────────────
   publish-release:
     needs: [build-desktop, build-android]
@@ -310,6 +355,12 @@ jobs:
         with:
           name: android-apk
           path: apk-output
+
+      - name: Baixar AAB Android
+        uses: actions/download-artifact@v4
+        with:
+          name: android-aab
+          path: aab-output
 
       - name: Anexar APK e publicar release
         uses: actions/github-script@v7
@@ -331,21 +382,28 @@ jobs:
               return;
             }
 
-            // Fazer upload do APK
-            const apkFiles = fs.readdirSync('apk-output').filter(f => f.endsWith('.apk'));
-            for (const apkFile of apkFiles) {
-              const apkPath = path.join('apk-output', apkFile);
-              const apkData = fs.readFileSync(apkPath);
-              console.log(`Fazendo upload de ${apkFile}...`);
+            // Fazer upload dos artefatos Android de sideload e Play.
+            const androidFiles = [
+              ...fs.readdirSync('apk-output').filter(f => f.endsWith('.apk')).map(f => ['apk-output', f]),
+              ...fs.readdirSync('aab-output').filter(f => f.endsWith('.aab')).map(f => ['aab-output', f]),
+            ];
+            for (const [directory, fileName] of androidFiles) {
+              const filePath = path.join(directory, fileName);
+              const fileData = fs.readFileSync(filePath);
+              console.log(`Fazendo upload de ${fileName}...`);
               await github.rest.repos.uploadReleaseAsset({
                 owner:      context.repo.owner,
                 repo:       context.repo.repo,
                 release_id: release.id,
-                name:       apkFile,
-                data:       apkData,
-                headers: { 'content-type': 'application/vnd.android.package-archive' },
+                name:       fileName,
+                data:       fileData,
+                headers: {
+                  'content-type': fileName.endsWith('.aab')
+                    ? 'application/octet-stream'
+                    : 'application/vnd.android.package-archive',
+                },
               });
-              console.log(`✓ ${apkFile} anexado.`);
+              console.log(`✓ ${fileName} anexado.`);
             }
 
             // Publicar release
