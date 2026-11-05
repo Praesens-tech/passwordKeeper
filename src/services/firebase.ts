@@ -1,11 +1,13 @@
 import { getApp, getApps, initializeApp } from "firebase/app";
 import type { FirebaseApp } from "firebase/app";
 import {
-  GoogleAuthProvider,
   getAuth,
   inMemoryPersistence,
   initializeAuth,
-  signInWithCredential,
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+  sendPasswordResetEmail,
+  signInWithEmailAndPassword,
   signOut,
 } from "firebase/auth";
 import type { Auth } from "firebase/auth";
@@ -57,6 +59,17 @@ export interface FirebaseVaultAccess {
   collaboration?: FirebaseVaultDocument["collaboration"];
 }
 
+export interface FirebaseAccount {
+  uid: string;
+  email: string;
+  emailVerified: boolean;
+}
+
+function accountFromUser(user: import("firebase/auth").User): FirebaseAccount {
+  if (!user.email) throw new Error("A conta precisa ter um e-mail.");
+  return { uid: user.uid, email: user.email, emailVerified: user.emailVerified };
+}
+
 let cached: { app: FirebaseApp; db: Firestore } | undefined;
 let cachedAuth: Auth | undefined;
 
@@ -66,7 +79,7 @@ export function isFirebaseConfigured(): boolean {
 
 function getFirebase(): { app: FirebaseApp; db: Firestore } {
   if (!isFirebaseConfigured()) {
-    throw new Error("Firebase não configurado. Preencha as variáveis VITE_FIREBASE_* no arquivo .env.");
+    throw new Error("O armazenamento na nuvem não está configurado neste aplicativo.");
   }
   if (!cached) {
     const app = getApps().length ? getApp() : initializeApp(config as {
@@ -84,8 +97,7 @@ function getFirebaseAuth(): Auth {
   const app = getFirebase().app;
   if (!cachedAuth) {
     try {
-      // Google credentials already live in the Tauri store. Keep Firebase's
-      // derived session in memory instead of persisting another auth token.
+      // Keep Firebase credentials in memory; do not persist another auth token.
       cachedAuth = initializeAuth(app, { persistence: inMemoryPersistence });
     } catch {
       // Handles hot reload after Auth was initialized for the same app.
@@ -95,24 +107,87 @@ function getFirebaseAuth(): Auth {
   return cachedAuth;
 }
 
-export interface FirebaseUserIdentity {
-  uid: string;
-  email: string | null;
+export async function createFirebaseAccount(email: string, password: string): Promise<FirebaseAccount> {
+  const credential = await createUserWithEmailAndPassword(getFirebaseAuth(), email.trim(), password);
+  await sendEmailVerification(credential.user);
+  return accountFromUser(credential.user);
 }
 
-export async function signInFirebaseWithGoogleToken(accessToken: string): Promise<FirebaseUserIdentity> {
-  if (!accessToken) throw new Error("Conecte sua conta Google antes de acessar o Firebase.");
-  const credential = GoogleAuthProvider.credential(null, accessToken);
-  const result = await signInWithCredential(getFirebaseAuth(), credential);
-  return { uid: result.user.uid, email: result.user.email };
+export async function signInFirebaseAccount(email: string, password: string): Promise<FirebaseAccount> {
+  const credential = await signInWithEmailAndPassword(getFirebaseAuth(), email.trim(), password);
+  await credential.user.reload();
+  if (!credential.user.emailVerified) {
+    await sendEmailVerification(credential.user);
+    await signOut(getFirebaseAuth());
+    throw new Error("Confirme seu e-mail pelo link enviado para entrar e acessar a nuvem.");
+  }
+  return accountFromUser(credential.user);
+}
+
+export async function getFirebaseAccount(): Promise<FirebaseAccount | null> {
+  const user = getFirebaseAuth().currentUser;
+  if (!user) return null;
+  await user.reload();
+  if (!user.emailVerified) return null;
+  return accountFromUser(user);
+}
+
+export async function requestFirebasePasswordReset(email: string): Promise<void> {
+  await sendPasswordResetEmail(getFirebaseAuth(), email.trim());
 }
 
 export async function signOutFirebase(): Promise<void> {
   if (cachedAuth) await signOut(cachedAuth);
 }
 
-export function firebaseDocumentIdForDriveFile(fileId: string): string {
-  return `drive-${fileId}`;
+function personalVaultRef(uid: string) {
+  return doc(getFirebase().db, "personalVaults", uid);
+}
+
+export async function getPersonalFirebaseVault(uid: string): Promise<{ ciphertext: string; revision: number } | null> {
+  const snapshot = await getDoc(personalVaultRef(uid));
+  return snapshot.exists()
+    ? { ciphertext: String(snapshot.data().ciphertext ?? ""), revision: Number(snapshot.data().revision ?? 0) }
+    : null;
+}
+
+export async function getLegacyPersonalFirebaseVault(email: string): Promise<{ id: string; ciphertext: string; revision: number } | null> {
+  const normalizedEmail = email.trim().toLowerCase();
+  const matches = await getDocs(query(
+    collection(getFirebase().db, "sharedVaults"),
+    where("memberEmails", "array-contains", normalizedEmail),
+  ));
+  const legacy = matches.docs.find((snapshot) => {
+    const data = snapshot.data() as FirebaseVaultDocument;
+    return data.kind === "personal" && data.ownerEmail?.trim().toLowerCase() === normalizedEmail;
+  });
+  if (!legacy) return null;
+  const data = legacy.data() as FirebaseVaultDocument;
+  return { id: legacy.id, ciphertext: data.ciphertext, revision: Number(data.revision ?? 0) };
+}
+
+export async function savePersonalFirebaseVault(uid: string, email: string, ciphertext: string, expectedRevision?: number): Promise<number> {
+  if (new TextEncoder().encode(ciphertext).byteLength > 900_000) {
+    throw new Error("A cópia criptografada excede o limite da nuvem. Salve também uma cópia local.");
+  }
+  return runTransaction(getFirebase().db, async (transaction) => {
+    const ref = personalVaultRef(uid);
+    const current = await transaction.get(ref);
+    const revision = current.exists() ? Number(current.data().revision ?? 0) : 0;
+    if (current.exists() && (expectedRevision === undefined || revision !== expectedRevision)) {
+      throw new Error("CONFLICT: o backup mudou em outro dispositivo. Sincronize antes de salvar.");
+    }
+    transaction.set(ref, { ciphertext, email: email.trim().toLowerCase(), revision: revision + 1, updatedAt: serverTimestamp() });
+    return revision + 1;
+  });
+}
+
+export function watchPersonalFirebaseVault(uid: string, onChange: (vault: { ciphertext: string; revision: number } | null) => void, onError?: (error: Error) => void): () => void {
+  return onSnapshot(personalVaultRef(uid), (snapshot) => {
+    onChange(snapshot.exists()
+      ? { ciphertext: String(snapshot.data().ciphertext ?? ""), revision: Number(snapshot.data().revision ?? 0) }
+      : null);
+  }, (error) => onError?.(error));
 }
 
 function vaultRef(documentId: string) {
@@ -140,12 +215,12 @@ export async function createFirebaseVault(
     updatedAt: serverTimestamp(),
   } satisfies FirebaseVaultDocument;
   if (new TextEncoder().encode(ciphertext).byteLength > 900_000) {
-    throw new Error("O cofre cifrado excede o limite seguro do Firestore. Use um backup local e solicite a migração para arquivos maiores.");
+    throw new Error("A cópia criptografada excede o limite da nuvem. Use também um backup local.");
   }
   await runTransaction(getFirebase().db, async (transaction) => {
     const ref = vaultRef(documentId);
     const existing = await transaction.get(ref);
-    if (existing.exists()) throw new Error("Já existe um cofre Firebase com este identificador; nenhum dado foi sobrescrito.");
+    if (existing.exists()) throw new Error("Já existe um cofre na nuvem com este identificador; nenhum dado foi sobrescrito.");
     transaction.set(ref, data);
   });
 }

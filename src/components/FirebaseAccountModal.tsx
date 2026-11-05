@@ -1,0 +1,80 @@
+import { useState } from "react";
+import { Cloud, LogOut, X, Loader2, ShieldCheck, KeyRound } from "lucide-react";
+import { useVaultStore } from "../store/vaultStore";
+
+export function FirebaseAccountModal({ onClose }: { onClose: () => void }) {
+  const { firebaseAccount, firebaseBackupRevision, vault, signInAccount, createAccount, signOutAccount, syncToFirebase, resetAccountPassword } = useVaultStore();
+  const [mode, setMode] = useState<"signin" | "create">("signin");
+  const [email, setEmail] = useState(firebaseAccount?.email ?? "");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
+  async function submit() {
+    setBusy(true); setError(""); setMessage("");
+    try {
+      if (mode === "create") {
+        if (password.length < 12) throw new Error("Use uma senha de conta com pelo menos 12 caracteres.");
+        if (password !== confirmPassword) throw new Error("As senhas não conferem.");
+        await createAccount(email, password);
+        setMessage("Enviamos um link de confirmação. Confirme o e-mail e depois entre na conta.");
+        setMode("signin"); setPassword(""); setConfirmPassword("");
+      } else {
+        await signInAccount(email, password);
+        setPassword("");
+        setMessage("Conta conectada. O cofre continua criptografado antes do envio.");
+      }
+    } catch (e) { setError(String(e).replace(/^Error:\s*/, "")); }
+    finally { setBusy(false); }
+  }
+
+  async function backupNow() {
+    setBusy(true); setError(""); setMessage("");
+    try { await syncToFirebase(); setMessage("Backup criptografado enviado e verificado na nuvem."); }
+    catch (e) { setError(String(e).replace(/^Error:\s*/, "")); }
+    finally { setBusy(false); }
+  }
+
+  async function signOut() {
+    setBusy(true);
+    try { await signOutAccount(); setMessage("Sessão encerrada neste dispositivo."); }
+    catch (e) { setError(String(e)); }
+    finally { setBusy(false); }
+  }
+
+  async function resetPassword() {
+    setBusy(true); setError(""); setMessage("");
+    try { await resetAccountPassword(email); setMessage("Enviamos um link para redefinir a senha da conta."); }
+    catch (e) { setError(String(e).replace(/^Error:\s*/, "")); }
+    finally { setBusy(false); }
+  }
+
+  return <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4">
+    <section className="w-full max-w-md rounded-2xl border border-vault-border bg-vault-card p-5 shadow-2xl">
+      <header className="mb-4 flex items-center justify-between">
+        <div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-vault-primary/20"><Cloud size={18} className="text-vault-primary" /></span><div><h2 className="font-semibold text-vault-text">Conta e nuvem</h2><p className="text-xs text-vault-textMuted">Backup criptografado e compartilhamentos</p></div></div>
+        <button onClick={onClose} className="text-vault-textMuted hover:text-vault-text" aria-label="Fechar"><X size={20} /></button>
+      </header>
+
+      {firebaseAccount ? <div className="space-y-4">
+        <div className="rounded-xl border border-vault-border bg-vault-sidebar p-3"><p className="text-sm text-vault-text">{firebaseAccount.email}</p><p className="mt-1 text-xs text-vault-textMuted">E-mail confirmado · sessão válida enquanto o app estiver aberto</p></div>
+        <div className="flex items-start gap-2 rounded-xl bg-vault-success/10 p-3 text-xs text-vault-success"><ShieldCheck size={15} className="mt-0.5 shrink-0" />A nuvem recebe apenas o cofre cifrado com sua senha mestra.</div>
+        <p className="text-xs text-vault-textMuted">{firebaseBackupRevision ? "Backup já vinculado à conta." : "Ainda não há backup pessoal nesta conta."}</p>
+        <button onClick={backupNow} disabled={busy || !vault} className="flex w-full items-center justify-center gap-2 rounded-xl bg-vault-primary py-2.5 font-medium text-vault-bg disabled:opacity-50">{busy ? <Loader2 size={16} className="animate-spin" /> : <Cloud size={16} />}Enviar backup agora</button>
+        <button onClick={signOut} disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-xl border border-vault-border py-2 text-sm text-vault-textMuted hover:text-vault-danger"><LogOut size={14} />Sair da conta neste dispositivo</button>
+      </div> : <div className="space-y-3">
+        <div className="flex gap-2 text-xs"><button onClick={() => setMode("signin")} className={`flex-1 rounded-lg py-2 ${mode === "signin" ? "bg-vault-primary/15 text-vault-primary" : "text-vault-textMuted"}`}>Entrar</button><button onClick={() => setMode("create")} className={`flex-1 rounded-lg py-2 ${mode === "create" ? "bg-vault-primary/15 text-vault-primary" : "text-vault-textMuted"}`}>Criar conta</button></div>
+        <label className="block text-xs text-vault-textMuted">E-mail<input type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 w-full rounded-xl border border-vault-border bg-vault-input px-3 py-2.5 text-sm text-vault-text" /></label>
+        <label className="block text-xs text-vault-textMuted">Senha da conta<input type="password" autoComplete={mode === "create" ? "new-password" : "current-password"} value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1 w-full rounded-xl border border-vault-border bg-vault-input px-3 py-2.5 text-sm text-vault-text" /></label>
+        {mode === "signin" && <button type="button" onClick={resetPassword} disabled={busy || !email} className="text-xs text-vault-primary hover:underline"><KeyRound size={12} className="mr-1 inline" />Esqueci a senha</button>}
+        {mode === "create" && <label className="block text-xs text-vault-textMuted">Confirme a senha<input type="password" autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="mt-1 w-full rounded-xl border border-vault-border bg-vault-input px-3 py-2.5 text-sm text-vault-text" /></label>}
+        {mode === "create" && <p className="text-xs text-vault-textMuted">Mínimo de 12 caracteres. Será necessário confirmar o e-mail para usar a nuvem.</p>}
+        {error && <p role="alert" className="rounded-lg bg-vault-danger/10 p-2.5 text-xs text-vault-danger">{error}</p>}
+        {message && <p role="status" className="rounded-lg bg-vault-success/10 p-2.5 text-xs text-vault-success">{message}</p>}
+        <button onClick={submit} disabled={busy || !email || !password} className="flex w-full items-center justify-center gap-2 rounded-xl bg-vault-primary py-2.5 font-medium text-vault-bg disabled:opacity-50">{busy ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />}{mode === "create" ? "Criar conta e enviar confirmação" : "Entrar"}</button>
+      </div>}
+    </section>
+  </div>;
+}

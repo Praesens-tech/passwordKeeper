@@ -32,7 +32,7 @@ const ROLE_OPTIONS: { value: VaultPermission; label: string; desc: string; icon:
 ];
 
 export function ShareModal({ target, type, onClose }: ShareModalProps) {
-  const { vault, googleToken, createSharedDocument } = useVaultStore();
+  const { vault, firebaseAccount, createSharedDocument } = useVaultStore();
   const [step, setStep] = useState<"form" | "sharing" | "done" | "error">("form");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<VaultPermission>("reader");
@@ -105,11 +105,11 @@ export function ShareModal({ target, type, onClose }: ShareModalProps) {
         <div className="p-6">
           {step === "form" && (
             <div className="space-y-4">
-              {!googleToken && (
+              {!firebaseAccount && (
                 <div className="p-3 bg-vault-warning/10 border border-vault-warning/30 rounded-xl flex items-start gap-2">
                   <AlertCircle size={16} className="text-vault-warning mt-0.5 flex-shrink-0" />
                   <p className="text-sm text-vault-warning">
-                    Conecte sua conta Google primeiro para compartilhar pelo Firebase.
+                    Entre na sua conta Password Keeper para compartilhar pela nuvem.
                   </p>
                 </div>
               )}
@@ -196,7 +196,7 @@ export function ShareModal({ target, type, onClose }: ShareModalProps) {
 
               {/* Info box */}
               <div className="p-3 bg-vault-sidebar border border-vault-border rounded-xl text-xs text-vault-textMuted leading-relaxed">
-                Uma cópia criptografada será criada no Firebase. O destinatário encontra o compartilhamento ao entrar com este e-mail Google e precisa da senha de compartilhamento para abrir. Seu cofre principal não é alterado.
+                Uma cópia criptografada será criada na nuvem. O destinatário encontra o compartilhamento ao entrar com esta conta de e-mail e precisa da senha de compartilhamento para abrir. Seu cofre principal não é alterado.
               </div>
 
               <div className="flex gap-3 pt-2">
@@ -205,7 +205,7 @@ export function ShareModal({ target, type, onClose }: ShareModalProps) {
                 </button>
                 <button
                   onClick={handleShare}
-                  disabled={!email || !sharePassword || !googleToken}
+                  disabled={!email || !sharePassword || !firebaseAccount}
                   className="flex-1 py-2.5 bg-vault-primary hover:bg-vault-primaryHover disabled:opacity-40 disabled:cursor-not-allowed rounded-xl text-white font-medium transition-colors flex items-center justify-center gap-2"
                 >
                   <Share2 size={16} /> Compartilhar
@@ -218,7 +218,7 @@ export function ShareModal({ target, type, onClose }: ShareModalProps) {
             <div className="text-center py-8">
               <div className="w-12 h-12 rounded-full border-2 border-vault-primary border-t-transparent animate-spin mx-auto mb-4" />
               <p className="text-vault-text font-medium">Criando compartilhamento...</p>
-              <p className="text-vault-textMuted text-sm mt-1">Criptografando e salvando no Firebase</p>
+              <p className="text-vault-textMuted text-sm mt-1">Criptografando e salvando na nuvem</p>
             </div>
           )}
 

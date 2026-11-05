@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { ShieldCheck, Search, Star, LayoutGrid, Plus, Lock, Cloud, Edit, Trash2, Share2, HardDrive, Flag, Info, FolderOpen, LogOut, Power, X, RefreshCw, AlertCircle } from "lucide-react";
+import { Search, Star, LayoutGrid, Plus, Lock, Cloud, Edit, Trash2, Share2, HardDrive, Flag, Info, FolderOpen, Power, X, RefreshCw, AlertCircle } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { useVaultStore } from "../store/vaultStore";
 import { usePlatform } from "../hooks/usePlatform";
 import { GroupForm } from "./GroupForm";
-import { GoogleDriveModal } from "./GoogleDriveModal";
+import { FirebaseAccountModal } from "./FirebaseAccountModal";
 import { ShareModal } from "./ShareModal";
 import { DeletionRequests } from "./DeletionRequests";
 import { AboutScreen } from "./AboutScreen";
@@ -21,7 +21,7 @@ interface SidebarProps {
 
 export function Sidebar({ onAddEntry, onForceSync, isForceSyncing }: SidebarProps) {
   const {
-    vault, activeView, selectedGroupId, searchQuery, googleToken, userInfo,
+    vault, activeView, selectedGroupId, searchQuery, firebaseAccount,
     isSyncing, isDirty, localVaultPath, sidebarOpen, sharedSources,
     syncError, clearSyncError,
     setActiveView, selectGroup, setSearchQuery, lockVault,
@@ -32,7 +32,7 @@ export function Sidebar({ onAddEntry, onForceSync, isForceSyncing }: SidebarProp
 
   const [showGroupForm, setShowGroupForm] = useState(false);
   const [editingGroup, setEditingGroup] = useState<PasswordGroup | null>(null);
-  const [showDriveModal, setShowDriveModal] = useState(false);
+  const [showCloudAccount, setShowCloudAccount] = useState(false);
   const [shareGroup, setShareGroup] = useState<PasswordGroup | null>(null);
   const [confirmDeleteGroup, setConfirmDeleteGroup] = useState<string | null>(null);
   const [showDeletionRequests, setShowDeletionRequests] = useState(false);
@@ -89,8 +89,8 @@ export function Sidebar({ onAddEntry, onForceSync, isForceSyncing }: SidebarProp
         {/* Logo */}
         <div className="p-5 border-b border-vault-border">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-vault-primary to-vault-secondary flex items-center justify-center">
-              <ShieldCheck size={18} className="text-white" />
+            <div className="w-9 h-9 rounded-lg bg-white border border-vault-border flex items-center justify-center p-1.5">
+              <img src="/assets/praesens_simbolo.svg" alt="Praesens" className="w-full h-full object-contain" />
             </div>
             <div className="flex-1 min-w-0">
               <h1 className="text-vault-text font-bold text-sm leading-tight">Password Keeper</h1>
@@ -274,39 +274,14 @@ export function Sidebar({ onAddEntry, onForceSync, isForceSyncing }: SidebarProp
             </button>
           )}
 
-          {/* Google Drive */}
-          {googleToken ? (
-            <div className="flex items-center gap-1 px-3 py-2 rounded-xl hover:bg-vault-card transition-colors">
-              <Cloud size={16} className="text-vault-primary flex-shrink-0" />
-              <button
-                onClick={() => setShowDriveModal(true)}
-                className="flex-1 text-left truncate text-xs text-vault-textSecondary min-w-0"
-              >
-                {userInfo?.email ?? "Drive conectado"}
-              </button>
-              {(isSyncing || isForceSyncing) && (
-                <span className="w-3 h-3 rounded-full border border-vault-primary border-t-transparent animate-spin flex-shrink-0" />
-              )}
-              <button
-                onClick={() => { useVaultStore.getState().setGoogleToken(null); useVaultStore.getState().setUserInfo(null); useVaultStore.getState().setDriveFileId(null); }}
-                className="p-1 rounded text-vault-textMuted hover:text-vault-danger transition-colors flex-shrink-0"
-                title="Desconectar conta Google"
-              >
-                <LogOut size={13} />
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => setShowDriveModal(true)}
-              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition-colors hover:bg-vault-card"
-            >
-              <Cloud size={16} className="text-vault-textMuted" />
-              <span className="flex-1 text-left truncate text-xs text-vault-textMuted">Google Drive</span>
-            </button>
-          )}
+          <button onClick={() => setShowCloudAccount(true)} className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition-colors hover:bg-vault-card">
+            <Cloud size={16} className={firebaseAccount ? "text-vault-primary" : "text-vault-textMuted"} />
+            <span className="flex-1 text-left truncate text-xs text-vault-textMuted">{firebaseAccount?.email ?? "Conta e backup na nuvem"}</span>
+            {(isSyncing || isForceSyncing) && <span className="h-3 w-3 rounded-full border border-vault-primary border-t-transparent animate-spin" />}
+          </button>
 
           {/* Force sync button — visible when connected and there are shared sources or dirty state */}
-          {googleToken && (isDirty || sharedSources.length > 0) && (
+          {firebaseAccount && (isDirty || sharedSources.length > 0) && (
             <button
               onClick={onForceSync}
               disabled={isSyncing || isForceSyncing}
@@ -419,7 +394,7 @@ export function Sidebar({ onAddEntry, onForceSync, isForceSyncing }: SidebarProp
           onClose={() => { setShowGroupForm(false); setEditingGroup(null); }}
         />
       )}
-      {showDriveModal && <GoogleDriveModal onClose={() => setShowDriveModal(false)} />}
+      {showCloudAccount && <FirebaseAccountModal onClose={() => setShowCloudAccount(false)} />}
       {shareGroup && (
         <ShareModal target={shareGroup} type="group" onClose={() => setShareGroup(null)} />
       )}
@@ -463,8 +438,8 @@ export function Sidebar({ onAddEntry, onForceSync, isForceSyncing }: SidebarProp
             <p className="text-vault-textMuted text-sm mb-4">
               {confirmRemoveShare.all
                 ? (sharedSources.find((source) => source.id === confirmRemoveShare.id)?.backend === "firebase"
-                    ? "O documento compartilhado será removido do Firebase e os outros usuários perderão acesso."
-                    : "O arquivo colaborativo será removido do Drive e os outros usuários deixarão de sincronizar.")
+                    ? "O documento compartilhado será removido da nuvem e os outros usuários perderão acesso."
+                    : "O arquivo compartilhado será removido e os outros usuários deixarão de sincronizar.")
                 : "O compartilhamento será removido apenas deste dispositivo."}
             </p>
             <div className="flex gap-3">

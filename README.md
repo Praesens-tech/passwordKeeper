@@ -29,7 +29,7 @@ Observacoes:
 
 ## O Que o Produto Faz
 
-Password Keeper guarda credenciais em um arquivo criptografado `.keep`. O cofre pessoal pode ficar apenas no dispositivo ou ser sincronizado pelo Google Drive. O compartilhamento de cofres, grupos e entradas usa documentos criptografados no Firebase/Firestore. A senha mestra nunca e enviada ao Google, ao Firebase ou ao GitHub.
+Password Keeper mantém o cofre em um arquivo .keep criptografado localmente. Com uma conta Password Keeper, o usuário pode enviar uma cópia cifrada ao Firebase para backup e compartilhamento. A senha mestra não é enviada ao Firebase.
 
 Principais recursos:
 
@@ -41,9 +41,8 @@ Principais recursos:
 - Medidor de forca da senha.
 - Salvar e abrir arquivo local `.keep`.
 - Escolher a localizacao do arquivo `.keep` ao criar um cofre novo no desktop.
-- Sincronizar cofre principal com Google Drive.
-- Detectar mudancas remotas via Google Drive Changes API.
-- Compartilhar cofres, grupos e entradas no Firebase/Firestore, sem arquivos colaborativos no Drive.
+- Enviar backup criptografado do cofre pessoal ao Firebase.
+- Sincronizar backups e compartilhar cofres, grupos e entradas por documentos Firebase separados.
 - Compartilhar cofre, grupo ou entrada como documento colaborativo separado.
 - Permissoes por colaborador: leitor, editor e proprietario.
 - Senha de compartilhamento separada da senha mestra.
@@ -81,8 +80,8 @@ Ela tambem inclui links de download por plataforma e um historico simples de ver
 | Criptografia | Web Crypto API |
 | HTTP desktop | Rust `reqwest` via comando Tauri |
 | HTTP Android | Kotlin `HttpURLConnection` via JNI |
-| OAuth | Google OAuth 2.0 com PKCE |
-| Cloud | Google Drive API (cofre pessoal) + Firebase/Firestore (compartilhamentos) |
+| Autenticacao | Firebase Authentication por e-mail e senha verificados |
+| Cloud | Firebase Authentication + Firestore |
 | CI/CD | GitHub Actions |
 
 ## Arquitetura Geral
@@ -93,16 +92,12 @@ flowchart LR
   UI --> Store[Zustand Vault Store]
   Store --> Crypto[Crypto Service<br/>AES-256-GCM + PBKDF2]
   Store --> Local[Local File Service<br/>.keep]
-  Store --> Drive[Google Drive Service]
   Store --> Firebase[Firebase Auth + Firestore Service]
-  Drive --> NativeFetch[Tauri native_fetch]
+  UI --> NativeFetch[Verificacao de atualizacao]
   NativeFetch --> Desktop[Desktop<br/>Rust reqwest]
   NativeFetch --> Android[Android<br/>Kotlin HttpURLConnection via JNI]
-  Desktop --> Google[Google APIs]
-  Android --> Google
   Crypto --> Encrypted[Encrypted .keep envelope]
   Encrypted --> Local
-  Encrypted --> Google
   Encrypted --> Firebase
 ```
 
@@ -111,7 +106,7 @@ flowchart LR
 1. O cofre descriptografado vive apenas em memoria.
 2. Toda persistencia usa conteudo criptografado.
 3. A senha mestra nao e persistida.
-4. Google Drive opcional sincroniza o cofre pessoal; Firestore armazena envelopes cifrados de compartilhamentos.
+4. O Firebase guarda apenas envelopes cifrados e metadados mínimos de acesso.
 5. Compartilhamentos usam documentos separados no Firestore.
 6. Permissoes da interface sao aplicadas a partir do papel do usuario e do escopo compartilhado.
 
@@ -262,7 +257,7 @@ sequenceDiagram
   participant UI as React UI
   participant S as Vault Store
   participant C as Crypto
-  participant F as Local/Drive
+  participant F as Local/Firebase
 
   U->>UI: Informa senha mestra
   UI->>S: createVault(masterPassword)
@@ -282,9 +277,9 @@ sequenceDiagram
   participant UI as React UI
   participant S as Vault Store
   participant C as Crypto
-  participant F as Arquivo/Drive
+  participant F as Arquivo local/Firebase
 
-  U->>UI: Seleciona arquivo ou Drive
+  U->>UI: Seleciona arquivo local ou restaura do Firebase
   UI->>F: Le .keep criptografado
   F-->>UI: Conteudo criptografado
   U->>UI: Informa senha
@@ -292,27 +287,6 @@ sequenceDiagram
   S->>C: decryptVaultEnvelope()
   C-->>S: VaultData JSON
   S-->>UI: Cofre desbloqueado
-```
-
-### Sincronizacao com Google Drive
-
-```mermaid
-sequenceDiagram
-  participant App as Password Keeper
-  participant Store as Vault Store
-  participant Drive as Google Drive API
-
-  App->>Store: initDriveChangesToken()
-  Store->>Drive: startPageToken
-  Drive-->>Store: pageToken
-  loop A cada 5 segundos
-    Store->>Drive: changes(pageToken)
-    Drive-->>Store: fileIds alterados
-    alt Cofre principal mudou
-      Store->>Drive: download file
-      Store->>Store: decrypt + refresh
-    end
-  end
 ```
 
 ### Compartilhamento Colaborativo
@@ -323,7 +297,7 @@ Compartilhar nao expoe o arquivo principal do usuario. O app cria um documento s
 sharedVaults/<documentId>
 ```
 
-Esse documento contem apenas o escopo compartilhado: cofre inteiro, grupo ou entrada. O conteudo usa envelope v2 cifrado, key slots do proprietario e colaborador, e acesso associado ao e-mail Google verificado.
+Esse documento contem apenas o escopo compartilhado: cofre inteiro, grupo ou entrada. O conteudo usa envelope v2 cifrado, key slots do proprietario e colaborador, e acesso associado a uma conta com e-mail confirmado.
 
 ```mermaid
 flowchart TD
@@ -361,8 +335,6 @@ Comandos expostos ao frontend:
 
 | Comando | Finalidade |
 |---|---|
-| `start_oauth` | Fluxo OAuth desktop via browser externo e servidor TCP local |
-| `start_oauth_android_native` | Fluxo OAuth Android via Kotlin e AppAuth |
 | `native_fetch` | Proxy HTTP nativo para contornar CORS e restricoes do WebView |
 | `write_file` | Escreve arquivo local |
 | `read_file` | Le arquivo local |
@@ -381,45 +353,11 @@ flowchart LR
   Rust -->|Android| JNI[JNI bridge]
   JNI --> Kotlin[NativeHttp.kt]
   Kotlin --> HttpURLConnection[Android HttpURLConnection]
-  Reqwest --> Google[Google APIs]
-  HttpURLConnection --> Google
+  Reqwest --> GitHub[GitHub releases]
+  HttpURLConnection --> GitHub
 ```
 
 Motivo do caminho especial no Android: threads NDK podem falhar em DNS e sockets em alguns ambientes Android. Por isso o app delega chamadas HTTP para Kotlin.
-
-## Google OAuth
-
-Implementacao: [src/services/googleDrive.ts](src/services/googleDrive.ts)
-
-### Desktop
-
-- Usa OAuth 2.0 com PKCE.
-- Abre o navegador externo.
-- Escuta callback local em `http://localhost:8899`.
-- O token fica persistido no Tauri Store.
-- O fallback `localStorage` nao guarda token sensivel.
-
-### Android
-
-- Usa `VITE_GOOGLE_ANDROID_CLIENT_ID`.
-- Usa redirect reverso:
-
-```text
-com.googleusercontent.apps.<client-id>:/oauth2redirect
-```
-
-- O fluxo nativo e implementado por:
-  - [GoogleOAuthManager.kt](src-tauri/gen/android/app/src/main/java/com/passwordkeeper/vault/GoogleOAuthManager.kt)
-  - [GoogleOAuthBridge.kt](src-tauri/gen/android/app/src/main/java/com/passwordkeeper/vault/GoogleOAuthBridge.kt)
-
-### Escopos Google
-
-```text
-https://www.googleapis.com/auth/drive
-https://www.googleapis.com/auth/userinfo.email
-```
-
-O escopo `drive` permite buscar, criar, atualizar e compartilhar arquivos `.keep`. Para distribuicao publica ampla, a verificacao OAuth do Google pode ser necessaria.
 
 ## Persistencia Local
 
@@ -437,14 +375,13 @@ Componentes principais:
 
 | Arquivo | Responsabilidade |
 |---|---|
-| [src/App.tsx](src/App.tsx) | Layout principal, auto-save, polling Drive, auto-lock |
+| [src/App.tsx](src/App.tsx) | Layout principal, auto-save, listeners Firestore e auto-lock |
 | [src/components/MasterPasswordScreen.tsx](src/components/MasterPasswordScreen.tsx) | Criar, abrir e desbloquear cofres |
-| [src/components/Sidebar.tsx](src/components/Sidebar.tsx) | Navegacao, grupos, filtros, Drive |
+| [src/components/Sidebar.tsx](src/components/Sidebar.tsx) | Navegacao, grupos, filtros e conta Firebase |
 | [src/components/PasswordGrid.tsx](src/components/PasswordGrid.tsx) | Lista/grade de credenciais |
 | [src/components/PasswordDetail.tsx](src/components/PasswordDetail.tsx) | Detalhe e acoes da credencial |
 | [src/components/PasswordForm.tsx](src/components/PasswordForm.tsx) | Criar/editar credencial |
 | [src/components/ShareModal.tsx](src/components/ShareModal.tsx) | Criar compartilhamento |
-| [src/components/GoogleDriveModal.tsx](src/components/GoogleDriveModal.tsx) | Conexao e operacoes Drive |
 | [src/components/BackupModal.tsx](src/components/BackupModal.tsx) | Backup e exportacao |
 
 ## Estrutura do Repositorio
@@ -458,7 +395,6 @@ password-keeper/
 ├── docs/
 │   ├── index.html
 │   ├── assets/
-│   ├── oauth/
 │   └── release-readiness.md
 ├── public/
 ├── scripts/
@@ -490,226 +426,21 @@ password-keeper/
   - Android NDK.
   - Java 17.
   - Targets Rust Android.
-- Projeto Google Cloud com Drive API habilitada.
+- Firebase project com Email/Password e Firestore configurados.
 
 ## Variaveis de Ambiente
 
 Crie `.env` na raiz:
 
 ```env
-VITE_GOOGLE_CLIENT_ID=SEU_DESKTOP_CLIENT_ID.apps.googleusercontent.com
-VITE_GOOGLE_CLIENT_SECRET=GOCSPX-SEU_SECRET
-VITE_GOOGLE_ANDROID_CLIENT_ID=SEU_ANDROID_CLIENT_ID.apps.googleusercontent.com
+VITE_FIREBASE_API_KEY=SEU_FIREBASE_API_KEY
+VITE_FIREBASE_AUTH_DOMAIN=seu-projeto.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=seu-projeto
+VITE_FIREBASE_APP_ID=SEU_FIREBASE_APP_ID
 ```
 
 O arquivo `.env` nao deve ser commitado.
 
-## Setup Google Cloud
+## Firebase Authentication e Firestore
 
-1. Acesse o Google Cloud Console.
-2. Crie ou selecione um projeto.
-3. Ative a Google Drive API.
-4. Crie OAuth Client ID do tipo Desktop app.
-5. Configure redirect autorizado:
-
-```text
-http://localhost:8899
-```
-
-6. Crie OAuth Client ID do tipo Android.
-7. Configure:
-
-```text
-Package name: com.passwordkeeper.vault
-SHA-1: fingerprint da keystore Android usada na release
-```
-
-8. Coloque os valores no `.env` local e nos GitHub Secrets.
-
-## Instalar e Rodar
-
-```bash
-npm install
-npm run tauri dev
-```
-
-## Scripts
-
-| Comando | Uso |
-|---|---|
-| `npm run dev` | Vite dev server |
-| `npm run build` | TypeScript + Vite build |
-| `npm run preview` | Preview Vite |
-| `npm run tauri dev` | App desktop em modo desenvolvimento |
-| `npm run tauri build` | Build Tauri desktop |
-| `npm test -- --run` | Testes em modo single run |
-| `npm run test:watch` | Testes em watch mode |
-| `npm run test:coverage` | Cobertura |
-
-## Validacao Local
-
-Frontend:
-
-```bash
-npm run build
-```
-
-Backend Rust:
-
-```bash
-cd src-tauri
-cargo check
-```
-
-Testes:
-
-```bash
-npm test -- --run
-```
-
-Build desktop:
-
-```bash
-npm run tauri build
-```
-
-Build Android:
-
-```bash
-npm run tauri android build -- --apk
-```
-
-## Testes Automatizados
-
-| Area | Arquivos |
-|---|---|
-| Criptografia | [src/services/crypto.test.ts](src/services/crypto.test.ts) |
-| App e polling | [src/__tests__/App.test.tsx](src/__tests__/App.test.tsx) |
-| Store | [src/store/__tests__/vaultStore.test.ts](src/store/__tests__/vaultStore.test.ts), [src/store/vaultStore.refresh.test.ts](src/store/vaultStore.refresh.test.ts) |
-| Componentes | [src/components/__tests__/](src/components/__tests__/) |
-| Clipboard | [src/utils/clipboard.test.ts](src/utils/clipboard.test.ts) |
-
-## CI/CD
-
-### Security
-
-Workflow: [.github/workflows/security.yml](.github/workflows/security.yml)
-
-Roda em PRs e pushes para `master`.
-
-- `npm audit`
-- Gitleaks
-- Aikido via GitHub PR Gating
-
-### Release
-
-Workflow: [.github/workflows/release.yml](.github/workflows/release.yml)
-
-Dispara com tags:
-
-```bash
-git tag v0.2.13
-git push origin v0.2.13
-```
-
-Gera:
-
-- Linux `.AppImage`, `.deb`, `.rpm`
-- Windows `.exe`, `.msi`
-- macOS `.dmg` Intel e Apple Silicon
-- Android `.apk`
-- Artefatos assinados do updater Tauri para desktop
-- `latest.json` gerado pelo `tauri-action` e anexado a release para servir como manifesto de atualizacao
-
-### Versionamento na Release
-
-O script [scripts/sync-version.js](scripts/sync-version.js) sincroniza `package.json`, `package-lock.json`, `src-tauri/tauri.conf.json` e `src-tauri/Cargo.toml` com a tag durante o workflow.
-
-O script [scripts/update-product-page-version.js](scripts/update-product-page-version.js) sincroniza a pagina publica em `docs` com a tag publicada. Apos a release ser publicada, o workflow atualiza `docs/index.html` e `docs/download.html`, commita em `master` e deixa o GitHub Pages republicar a pagina com os links e o historico da versao corrente.
-
-### Auto Update
-
-Desktop usa `@tauri-apps/plugin-updater` apontando para:
-
-```text
-https://github.com/Praesens-tech/passwordKeeper/releases/latest/download/latest.json
-```
-
-Fluxo no app:
-
-1. Em builds instalados, o app verifica atualizacao na inicializacao.
-2. Se houver nova versao, pergunta ao usuario se deseja atualizar.
-3. Se o usuario aceitar, baixa, valida a assinatura, instala e reinicia quando necessario.
-4. Se o usuario recusar, a versao e ignorada no check automatico e o usuario pode tentar depois em **Ajuda > Atualizar**.
-
-Android usa deteccao da release mais recente e abre o APK para atualizacao manual. Esse comportamento deve ser substituido pela loja correspondente quando a distribuicao mobile sair por loja.
-
-## Secrets do GitHub Actions
-
-Obrigatorios para recursos Google:
-
-| Secret | Descricao |
-|---|---|
-| `VITE_GOOGLE_CLIENT_ID` | OAuth Client ID desktop |
-| `VITE_GOOGLE_CLIENT_SECRET` | OAuth Client Secret desktop |
-| `VITE_GOOGLE_ANDROID_CLIENT_ID` | OAuth Client ID Android |
-| `TAURI_SIGNING_PRIVATE_KEY` | Chave privada do updater Tauri usada para assinar artefatos |
-| `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | Senha da chave do updater, se houver |
-
-Recomendados para Android:
-
-| Secret | Descricao |
-|---|---|
-| `ANDROID_KEYSTORE_B64` | `.jks` codificado em Base64 |
-| `ANDROID_KEY_ALIAS` | Alias da chave |
-| `ANDROID_STORE_PASSWORD` | Senha do keystore |
-| `ANDROID_KEY_PASSWORD` | Senha da chave |
-
-Gerar Base64 da keystore:
-
-```bash
-base64 -w 0 release.jks
-```
-
-Se `ANDROID_KEYSTORE_B64` estiver ausente ou invalido, o workflow gera uma keystore temporaria. Isso permite build, mas pode quebrar atualizacao Android por assinatura diferente.
-
-## Seguranca Operacional
-
-Nunca commitar:
-
-- `.env`
-- `client_secret*.json`
-- `*.jks`
-- `*.keystore`
-- chaves privadas do updater Tauri
-- tokens OAuth
-- arquivos `.keep` reais de usuarios
-
-Se qualquer segredo for exposto:
-
-1. Revogue no provedor.
-2. Gere um novo.
-3. Atualize GitHub Secrets.
-4. Recrie builds publicos afetados.
-
-## Limitacoes Conhecidas
-
-- Nao ha backend proprio. A colaboracao depende de Google Drive.
-- Nao e um editor em tempo real estilo Google Docs. A sincronizacao usa polling eficiente via Drive Changes API.
-- O escopo Google Drive pode exigir verificacao OAuth para distribuicao publica ampla.
-- Android e distribuido por APK side-loading.
-- Assinatura/notarizacao macOS e assinatura Windows podem exigir passos adicionais para experiencia de instalacao sem alertas.
-
-## Roadmap Sugerido
-
-- Publicar politica de privacidade e termos.
-- Avaliar migracao de escopo `drive` para `drive.file` com Google Picker.
-- Assinar/notarizar macOS.
-- Assinar Windows com certificado.
-- Publicar canal Android oficial quando houver estrategia de distribuicao.
-- Adicionar pagina de suporte.
-- Evoluir pagina GitHub Pages com screenshots reais do app instalado.
-
-## Licenca
-
-ISC. Veja [package.json](package.json).
+O app usa o Firebase configurado no arquivo .env.example. O provedor Email/Password e as regras Firestore já foram publicados no projeto `password-keeper-mpb-2026`. As contas precisam confirmar o e-mail; a política de senha forte deve ser configurada nas definições do Firebase Authentication.

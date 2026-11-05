@@ -12,8 +12,8 @@ export function AboutScreen({ onClose }: AboutScreenProps) {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-vault-border flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-vault-primary to-vault-secondary flex items-center justify-center shadow-lg shadow-vault-primary/30">
-              <ShieldCheck size={22} className="text-white" />
+            <div className="w-12 h-12 rounded-lg border border-vault-border bg-white p-2.5 flex items-center justify-center">
+              <img src="/assets/praesens_simbolo.svg" alt="Praesens" className="h-full w-full object-contain" />
             </div>
             <div>
               <h2 className="text-vault-text font-bold text-lg leading-tight">Password Keeper</h2>
@@ -54,13 +54,13 @@ export function AboutScreen({ onClose }: AboutScreenProps) {
               />
               <InfoRow
                 icon={<Cloud size={15} className="text-vault-primary" />}
-                label="Google Drive"
-                value="Backup opcional — arquivo sempre criptografado antes do envio"
+                label="Nuvem"
+                value="Backup e compartilhamento cifrados; requer conta confirmada"
               />
               <InfoRow
                 icon={<Share2 size={15} className="text-vault-primary" />}
                 label="Compartilhamento"
-                value="Documento cifrado no Firebase; senha separada"
+                value="Cofre cifrado; senha de compartilhamento separada"
               />
             </div>
           </div>

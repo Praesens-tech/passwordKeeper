@@ -11,7 +11,7 @@ interface ImportSharedFileProps {
 
 export function ImportSharedFile({ onClose }: ImportSharedFileProps) {
   const {
-    googleToken, userInfo, ensureValidToken, authenticateFirebase, addSharedSource,
+    firebaseAccount, authenticateFirebase, addSharedSource,
   } = useVaultStore();
   const [files, setFiles] = useState<{ id: string; name: string; owner: string }[]>([]);
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
@@ -25,12 +25,9 @@ export function ImportSharedFile({ onClose }: ImportSharedFileProps) {
     setLoading(true);
     setErrorMsg("");
     try {
-      await ensureValidToken();
       const identity = await authenticateFirebase();
       const email = identity.email?.trim().toLowerCase();
-      if (!email || (userInfo?.email && email !== userInfo.email.trim().toLowerCase())) {
-        throw new Error("A conta Firebase não corresponde à conta Google conectada no app.");
-      }
+      if (!email) throw new Error("Entre na sua conta Password Keeper para acessar compartilhamentos.");
       const result = await listFirebaseSharesForEmail(email);
       setFiles(result.map((document) => ({
         id: document.id,
@@ -39,7 +36,7 @@ export function ImportSharedFile({ onClose }: ImportSharedFileProps) {
       })));
       setStep("pick");
     } catch (err) {
-      setErrorMsg(googleToken ? String(err) : "Conecte sua conta Google no app primeiro.");
+      setErrorMsg(firebaseAccount ? String(err) : "Entre na sua conta Password Keeper para acessar compartilhamentos.");
       setStep("error");
     }
     setLoading(false);
@@ -90,7 +87,7 @@ export function ImportSharedFile({ onClose }: ImportSharedFileProps) {
             </div>
             <div>
               <h2 className="text-vault-text font-semibold">Abrir compartilhamento</h2>
-              <p className="text-vault-textMuted text-sm">Acessar compartilhamentos Firebase da sua conta Google</p>
+              <p className="text-vault-textMuted text-sm">Acessar compartilhamentos disponíveis na nuvem</p>
             </div>
           </div>
           <button onClick={onClose} className="text-vault-textMuted hover:text-vault-text transition-colors">
@@ -101,7 +98,7 @@ export function ImportSharedFile({ onClose }: ImportSharedFileProps) {
         <div className="p-6">
           {step === "pick" && (
             <div className="space-y-4">
-              {userInfo && <p className="text-vault-textMuted text-xs">Conta: {userInfo.email}</p>}
+              {firebaseAccount && <p className="text-vault-textMuted text-xs">Conta: {firebaseAccount.email}</p>}
               <button
                 onClick={loadShares}
                 disabled={loading}
@@ -114,13 +111,13 @@ export function ImportSharedFile({ onClose }: ImportSharedFileProps) {
               {loading ? (
                 <div className="text-center py-8 text-vault-textMuted text-sm">
                   <Loader2 size={24} className="animate-spin mx-auto mb-3" />
-                  Buscando no Firebase...
+                  Buscando compartilhamentos na nuvem...
                 </div>
               ) : files.length === 0 ? (
                 <div className="p-4 bg-vault-sidebar border border-vault-border rounded-xl text-center">
                   <Share2 size={32} className="text-vault-textMuted mx-auto mb-2" />
                   <p className="text-vault-textSecondary text-sm font-medium">Nenhum cofre encontrado</p>
-                  <p className="text-vault-textMuted text-xs mt-1">
+      <p className="text-vault-textMuted text-xs mt-1">
                     Os compartilhamentos destinados a este e-mail aparecem aqui após o proprietário criar o acesso.
                   </p>
                 </div>

@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect } from "react";
-import { FolderOpen, Plus, Save, LogOut, Info, HardDrive, Cloud, Share2, RefreshCw, Key, PanelLeft, Power, Menu, Pencil } from "lucide-react";
+import { FolderOpen, Plus, Save, LogOut, Info, Cloud, Share2, RefreshCw, Key, PanelLeft, Power, Menu, Pencil } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { useVaultStore } from "../store/vaultStore";
 import { getMobileVaultPath, pickSavePath } from "../services/localFile";
 import { usePlatform } from "../hooks/usePlatform";
 import { AboutScreen } from "./AboutScreen";
-import { GoogleDriveModal } from "./GoogleDriveModal";
+import { FirebaseAccountModal } from "./FirebaseAccountModal";
 import { SharedUsersModal } from "./SharedUsersModal";
 import { BackupModal } from "./BackupModal";
 import { ChangePasswordModal } from "./ChangePasswordModal";
@@ -17,21 +17,15 @@ interface AppMenuBarProps {
 }
 
 export function AppMenuBar({ onForceSync, isForceSyncing }: AppMenuBarProps) {
-  const { saveToLocalFile, localVaultPath, closeVault, currentUserRole, toggleSidebar, sidebarOpen, vault, setVaultName, googleToken, syncToCloud, syncToFirebase } = useVaultStore();
-  const firebaseVaultId = useVaultStore((s) => s.firebaseVaultId);
-  const migrateVaultToFirebase = useVaultStore((s) => s.migrateVaultToFirebase);
+  const { saveToLocalFile, localVaultPath, closeVault, currentUserRole, toggleSidebar, sidebarOpen, vault, setVaultName, firebaseAccount, syncToFirebase } = useVaultStore();
   const { isAndroid } = usePlatform();
   const [openMenu, setOpenMenu] = useState<"file" | "utils" | "help" | null>(null);
   const [showAbout, setShowAbout] = useState(false);
-  const [showDrive, setShowDrive] = useState(false);
+  const [showCloudAccount, setShowCloudAccount] = useState(false);
   const [showShared, setShowShared] = useState(false);
   const [showBackup, setShowBackup] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [showVaultName, setShowVaultName] = useState(false);
-  const [showFirebaseMigration, setShowFirebaseMigration] = useState(false);
-  const [isMigratingFirebase, setIsMigratingFirebase] = useState(false);
-  const [firebaseMigrationDone, setFirebaseMigrationDone] = useState(false);
-  const [firebaseMigrationError, setFirebaseMigrationError] = useState("");
   const [vaultNameDraft, setVaultNameDraft] = useState("");
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
   const barRef = useRef<HTMLDivElement>(null);
@@ -84,8 +78,7 @@ export function AppMenuBar({ onForceSync, isForceSyncing }: AppMenuBarProps) {
       } else if (localVaultPath) {
         await saveToLocalFile(localVaultPath);
       }
-      if (googleToken) await syncToCloud();
-      if (useVaultStore.getState().firebaseVaultId) await syncToFirebase();
+      if (firebaseAccount) await syncToFirebase();
       setShowVaultName(false);
     } catch {
       // O banner de sincronização do aplicativo apresenta o erro ao usuário.
@@ -125,7 +118,6 @@ export function AppMenuBar({ onForceSync, isForceSyncing }: AppMenuBarProps) {
           <Dropdown anchor="left-[0px] top-9">
             <MenuItem icon={<Plus size={14} />} label="Novo cofre" onClick={() => { close(); closeVault(); }} />
             <MenuItem icon={<FolderOpen size={14} />} label="Abrir arquivo local..." onClick={() => { close(); closeVault(); }} />
-            <MenuItem icon={<Cloud size={14} />} label="Abrir do Google Drive..." onClick={() => { close(); closeVault(); }} />
             {!vault?.collaboration && isOwner && <MenuItem icon={<Pencil size={14} />} label="Nome do cofre..." onClick={() => { close(); setVaultNameDraft(vault?.name ?? "Meu cofre"); setShowVaultName(true); }} />}
             <Separator />
             <MenuItem
@@ -133,19 +125,7 @@ export function AppMenuBar({ onForceSync, isForceSyncing }: AppMenuBarProps) {
               label={localVaultPath ? "Salvar" : "Salvar como..."}
               onClick={() => { close(); saveToLocalFile(localVaultPath ?? undefined); }}
             />
-            <MenuItem icon={<HardDrive size={14} />} label="Google Drive..." onClick={() => { close(); setShowDrive(true); }} />
-            {isOwner && vault && !vault.collaboration && !firebaseVaultId && (
-              <MenuItem
-                icon={<Cloud size={14} />}
-                label="Migrar cofre para Firebase..."
-                onClick={() => {
-                  close();
-                  setFirebaseMigrationDone(false);
-                  setFirebaseMigrationError("");
-                  setShowFirebaseMigration(true);
-                }}
-              />
-            )}
+            <MenuItem icon={<Cloud size={14} />} label="Conta e nuvem..." onClick={() => { close(); setShowCloudAccount(true); }} />
             {isOwner && (
               <>
                 <Separator />
@@ -187,67 +167,15 @@ export function AppMenuBar({ onForceSync, isForceSyncing }: AppMenuBarProps) {
       </div>
 
       {showAbout && <AboutScreen onClose={() => setShowAbout(false)} />}
-      {showDrive && <GoogleDriveModal onClose={() => setShowDrive(false)} />}
+      {showCloudAccount && <FirebaseAccountModal onClose={() => setShowCloudAccount(false)} />}
       {showShared && <SharedUsersModal onClose={() => setShowShared(false)} />}
       {showBackup && <BackupModal onClose={() => setShowBackup(false)} />}
       {showChangePassword && <ChangePasswordModal onClose={() => setShowChangePassword(false)} />}
-      {showFirebaseMigration && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4">
-          <div className="bg-vault-card border border-vault-border rounded-2xl w-full max-w-md p-5 shadow-2xl">
-            <h2 className="text-vault-text font-semibold text-lg">Migrar cofre para Firebase</h2>
-            <p className="text-vault-textSecondary text-sm mt-2 leading-relaxed">
-              O app copia o cofre principal em formato cifrado e verifica a cópia. O arquivo local e o Google Drive permanecem intactos como backup.
-            </p>
-            <p className="text-vault-textMuted text-xs mt-2 leading-relaxed">
-              Compartilhamentos guardados em arquivos separados não entram nesta migração.
-            </p>
-            {firebaseMigrationError && (
-              <p role="alert" className="mt-3 p-3 rounded-xl bg-vault-danger/10 border border-vault-danger/20 text-vault-danger text-sm">
-                {firebaseMigrationError}
-              </p>
-            )}
-            {firebaseMigrationDone && (
-              <p role="status" className="mt-3 p-3 rounded-xl bg-vault-success/10 border border-vault-success/20 text-vault-success text-sm">
-                Cofre vinculado ao Firebase. As próximas alterações também serão sincronizadas para lá.
-              </p>
-            )}
-            <div className="flex justify-end gap-2 mt-5">
-              <button
-                onClick={() => setShowFirebaseMigration(false)}
-                disabled={isMigratingFirebase}
-                className="px-4 py-2 rounded-xl border border-vault-border text-vault-textMuted hover:text-vault-text disabled:opacity-50"
-              >
-                {firebaseMigrationDone ? "Fechar" : "Cancelar"}
-              </button>
-              {!firebaseMigrationDone && (
-                <button
-                  disabled={isMigratingFirebase}
-                  onClick={async () => {
-                    setIsMigratingFirebase(true);
-                    setFirebaseMigrationError("");
-                    try {
-                      await migrateVaultToFirebase();
-                      setFirebaseMigrationDone(true);
-                    } catch (error) {
-                      setFirebaseMigrationError(String(error));
-                    } finally {
-                      setIsMigratingFirebase(false);
-                    }
-                  }}
-                  className="px-4 py-2 rounded-xl bg-vault-primary text-vault-bg font-medium hover:bg-vault-primaryHover disabled:opacity-50"
-                >
-                  {isMigratingFirebase ? "Copiando e verificando..." : "Copiar e verificar"}
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
       {showVaultName && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4">
           <div className="w-full max-w-sm rounded-2xl border border-vault-border bg-vault-card p-5 shadow-2xl">
             <h2 className="text-vault-text font-semibold">Nome do cofre</h2>
-            <p className="text-vault-textMuted text-xs mt-1 mb-4">Esse nome será usado no arquivo local e no Google Drive.</p>
+            <p className="text-vault-textMuted text-xs mt-1 mb-4">Esse nome será usado no arquivo local e na cópia criptografada na nuvem.</p>
             <input autoFocus value={vaultNameDraft} onChange={(e) => setVaultNameDraft(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") void handleSaveVaultName(); }}
               className="w-full bg-vault-input border border-vault-border rounded-xl px-3.5 py-3 text-vault-text focus:outline-none focus:border-vault-primary" />

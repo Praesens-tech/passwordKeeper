@@ -2,7 +2,7 @@
 <html lang="pt-BR"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Como organizar suas senhas com o Password Keeper</title>
-<meta name="description" content="Aprenda a começar com um cofre de senhas: senha mestra, grupos, busca, backup e Google Drive opcional no Password Keeper para PC e Android.">
+<meta name="description" content="Aprenda a começar com um cofre de senhas local: senha mestra, grupos, busca e backup criptografado na nuvem no Password Keeper para PC e Android.">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <link rel="canonical" href="https://passwordkeeper.praesens.tech/como-organizar-senhas.html">
 <meta property="og:type" content="article"><meta property="og:locale" content="pt_BR">
@@ -10,12 +10,12 @@
 <meta property="og:description" content="Um guia prático para começar com seu cofre de senhas e conhecer a interface real.">
 <meta property="og:url" content="https://passwordkeeper.praesens.tech/como-organizar-senhas.html">
 <meta property="og:image" content="https://passwordkeeper.praesens.tech/assets/interface-organizacao.png">
-<meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#D85A30">
+<meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#4A1B0C">
 <link rel="icon" type="image/svg+xml" href="./assets/praesens_simbolo.svg">
 <style>
-*{box-sizing:border-box}body{margin:0;background:#FAECE7;color:#4A1B0C;font:18px/1.75 Arial,Helvetica,sans-serif}header,main,footer{width:min(850px,calc(100% - 36px));margin:auto}header{padding:24px 0;border-bottom:1px solid #F5C4B3}a{color:#993C1D;text-underline-offset:4px}header a{font-weight:bold}main{padding:40px 0}h1{font-size:clamp(2rem,5vw,3rem);line-height:1.15}h2{margin-top:42px;font-size:1.6rem;line-height:1.25}h3{font-size:1.2rem}figure{margin:28px 0}img{width:100%;height:auto;border-radius:8px;border:1px solid #F5C4B3}figcaption,.byline{font-size:.9rem;color:#65483e}.callout{padding:24px;border:1px solid #F5C4B3;background:white;border-radius:8px}.button{display:inline-block;padding:12px 22px;background:#993C1D;color:white;text-decoration:none;border-radius:8px;font-weight:bold}footer{padding:24px 0 40px;border-top:1px solid #F5C4B3}a:focus-visible{outline:3px solid #D85A30;outline-offset:4px}
+:root{color-scheme:light dark;--bg:#FAECE7;--surface:#fff;--text:#4A1B0C;--muted:#65483e;--line:#F5C4B3;--accent:#993C1D}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.75 Arial,Helvetica,sans-serif}.site-header{border-bottom:1px solid var(--line);background:var(--surface)}header .nav{width:min(1120px,calc(100% - 40px));min-height:78px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:24px}.brand{display:flex;align-items:center;gap:12px;color:var(--text);text-decoration:none;font-weight:700;line-height:1.15}.brand img{width:36px;height:39px;object-fit:contain}.brand small{display:block;margin-top:5px;color:var(--muted);font-size:11px;font-weight:400;letter-spacing:.4px}.nav-action{padding:10px 16px;background:var(--accent);color:#fff;text-decoration:none;font-weight:700;border-radius:4px}main{width:min(920px,calc(100% - 40px));margin:48px auto 64px;padding:clamp(26px,6vw,64px);border:1px solid var(--line);border-radius:6px;background:var(--surface)}a{color:var(--accent);text-underline-offset:4px}h1{margin:.4em 0;font-size:clamp(2rem,5vw,3.25rem);line-height:1.15;letter-spacing:-.7px;font-weight:500}h2{margin-top:42px;font-size:1.5rem;line-height:1.25;letter-spacing:-.3px;font-weight:500}h3{font-size:1.2rem}figure{margin:28px 0}img{width:100%;height:auto;border-radius:6px;border:1px solid var(--line)}figcaption,.byline{font-size:.9rem;color:var(--muted)}.callout{padding:24px;border:1px solid var(--line);background:var(--bg);border-radius:4px}.button{display:inline-block;padding:12px 22px;background:var(--accent);color:white;text-decoration:none;border-radius:4px;font-weight:bold}footer{width:min(920px,calc(100% - 40px));margin:0 auto;padding:24px 0 40px;border-top:1px solid var(--line);color:var(--muted)}footer a{margin-right:14px}a:focus-visible{outline:3px solid #D85A30;outline-offset:4px}@media(prefers-color-scheme:dark){:root{--bg:#4A1B0C;--surface:#4A1B0C;--text:#FAECE7;--muted:#F5C4B3;--line:#993C1D;--accent:#F0997B}.nav-action,.button{background:#F0997B;color:#4A1B0C}}@media(max-width:640px){header .nav{width:calc(100% - 28px);min-height:68px}main{width:calc(100% - 28px);margin:24px auto 40px}footer{width:calc(100% - 28px)}}
 </style></head><body>
-<header><a href="./">Password Keeper · Praesens.tech</a></header>
+<header class="site-header"><nav class="nav" aria-label="Navegação do site"><a class="brand" href="./"><img src="./assets/praesens_simbolo.svg" alt=""><span>Password Keeper<small>Praesens.tech</small></span></a><a class="nav-action" href="./#downloads">Baixar</a></nav></header>
 <main><article>
 <p class="byline">Guia do projeto Password Keeper · Atualizado em 6 de outubro de 2026</p>
 <h1>Como organizar suas senhas com o Password Keeper</h1>
@@ -38,9 +38,9 @@
 <figure><img src="./assets/interface-busca.png" alt="Busca por E-mail no Password Keeper, encontrando uma credencial fictícia" width="1280" height="720" loading="lazy"><figcaption>Uma busca por E-mail encontra a conta de demonstração.</figcaption></figure>
 <h2 id="backup">5. Mantenha backup do seu arquivo</h2>
 <p>Guarde cópias de segurança do arquivo <code>.keep</code> em um local protegido. Perder o dispositivo ou o arquivo sem backup pode impedir o acesso às credenciais. Uma cópia do arquivo continua exigindo a senha correta para ser desbloqueada.</p>
-<p>O Google Drive é opcional. Você pode começar mantendo o cofre local e conectar o serviço depois, caso queira sincronizar o arquivo criptografado entre dispositivos. Sincronização e backup têm papéis diferentes: uma alteração indesejada também pode ser sincronizada.</p>
+<p>O cofre fica local por padrão. Crie uma conta Password Keeper, confirme o e-mail e envie uma cópia criptografada à nuvem para acessá-la em outros dispositivos. Uma alteração indesejada pode ser sincronizada para essa cópia.</p>
 <h2>Conheça o projeto e conte onde encontrou dificuldade</h2>
 <p>O <a href="https://github.com/Praesens-tech/passwordKeeper">código e a documentação do Password Keeper</a> são públicos. Isso permite examinar a implementação; não representa uma certificação ou garantia de segurança absoluta.</p>
 <p>Para <a href="https://github.com/Praesens-tech/passwordKeeper/issues/new">relatar um problema ou sugerir uma melhoria</a>, informe a versão, o sistema e os passos para reproduzir. Remova informações pessoais de capturas e nunca anexe o cofre ou suas senhas.</p>
 <p><a class="button" href="./#downloads">Escolher meu download</a></p>
-</article></main><footer><a href="./">Voltar à página do Password Keeper</a> · <a href="./#duvidas">Perguntas frequentes</a></footer></body></html>
+</article></main><footer><a href="./">Página inicial</a><a href="./privacy.html">Política de privacidade</a><a href="./#duvidas">Perguntas frequentes</a></footer></body></html>

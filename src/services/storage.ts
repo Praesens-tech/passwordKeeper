@@ -2,8 +2,6 @@ import { Store } from "@tauri-apps/plugin-store";
 
 let _store: Store | null = null;
 
-const SENSITIVE_KEYS = new Set(["pk_google_token"]);
-
 async function getStore(): Promise<Store> {
   if (!_store) {
     _store = await Store.load("vault-config.json");
@@ -23,14 +21,10 @@ export async function persistSave(key: string, value: unknown): Promise<void> {
   } catch {
     // fallback: keep localStorage in sync for synchronous reads on cold start
   }
-  if (!SENSITIVE_KEYS.has(key)) {
-    try {
-      if (value == null) localStorage.removeItem(key);
-      else localStorage.setItem(key, JSON.stringify(value));
-    } catch { /* ignore */ }
-  } else {
-    try { localStorage.removeItem(key); } catch { /* ignore */ }
-  }
+  try {
+    if (value == null) localStorage.removeItem(key);
+    else localStorage.setItem(key, JSON.stringify(value));
+  } catch { /* ignore */ }
 }
 
 export async function persistLoad<T>(key: string): Promise<T | null> {

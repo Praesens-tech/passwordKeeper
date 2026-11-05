@@ -3,7 +3,6 @@ import { X, Download, Upload, FolderOpen, Check, AlertCircle, Loader2, Lock, Eye
 import { useVaultStore } from "../store/vaultStore";
 import { decryptVaultEnvelope } from "../services/crypto";
 import { pickSavePath, pickOpenPath, writeVaultFile, readVaultFile } from "../services/localFile";
-import { downloadVaultFile } from "../services/googleDrive";
 import { VaultData } from "../types/vault";
 
 interface BackupModalProps {
@@ -14,17 +13,13 @@ type PanelStatus = "idle" | "loading" | "done" | "error";
 
 export function BackupModal({ onClose }: BackupModalProps) {
   const {
-    getEncryptedVault, ensureValidToken,
-    driveFileId, googleToken, firebaseVaultId, mergeFromVault, syncToCloud, syncToFirebase,
+    getEncryptedVault, firebaseAccount, mergeFromVault, syncToFirebase,
   } = useVaultStore();
 
   // Panel 1: export local copy
   const [exportStatus, setExportStatus] = useState<PanelStatus>("idle");
   const [exportError, setExportError] = useState("");
 
-  // Panel 2: download Drive → local
-  const [downloadStatus, setDownloadStatus] = useState<PanelStatus>("idle");
-  const [downloadError, setDownloadError] = useState("");
 
   // Panel 3: import local file → current vault
   type ImportStep = "idle" | "password" | "loading" | "done" | "error";
@@ -52,23 +47,6 @@ export function BackupModal({ onClose }: BackupModalProps) {
     }
   }
 
-  async function handleDownloadFromDrive() {
-    setDownloadStatus("loading"); setDownloadError("");
-    try {
-      const token = await ensureValidToken();
-      if (!driveFileId) throw new Error("Nenhum cofre no Drive. Salve no Drive primeiro.");
-      const encrypted = await downloadVaultFile(token, driveFileId);
-      const path = await pickSavePath("backup-drive.keep");
-      if (!path) { setDownloadStatus("idle"); return; }
-      await writeVaultFile(path, encrypted);
-      setDownloadStatus("done");
-      setTimeout(() => setDownloadStatus("idle"), 2500);
-    } catch (err) {
-      setDownloadError(String(err));
-      setDownloadStatus("error");
-    }
-  }
-
   async function handlePickImportFile() {
     const path = await pickOpenPath();
     if (!path) return;
@@ -88,8 +66,7 @@ export function BackupModal({ onClose }: BackupModalProps) {
       const count = mergeFromVault(otherVault);
       setImportCount(count);
       setImportStep("done");
-      if (googleToken) syncToCloud().catch(() => {});
-      if (firebaseVaultId) syncToFirebase().catch(() => {});
+      if (firebaseAccount) syncToFirebase().catch(() => {});
     } catch (err) {
       const msg = String(err);
       setImportError(
@@ -139,22 +116,6 @@ export function BackupModal({ onClose }: BackupModalProps) {
             onRetry={() => { setExportStatus("idle"); setExportError(""); }}
           />
 
-          {/* ── Panel 2: Download Drive → local ── */}
-          <SimplePanel
-            icon={<Cloud size={15} className="text-blue-400" />}
-            title="Baixar do Drive para local"
-            desc="Baixar o cofre salvo no Google Drive e guardar como arquivo .keep"
-            status={downloadStatus}
-            error={downloadError}
-            actionLabel="Baixar do Drive..."
-            doneLabel="Arquivo salvo!"
-            actionIcon={<Download size={13} />}
-            onAction={handleDownloadFromDrive}
-            onRetry={() => { setDownloadStatus("idle"); setDownloadError(""); }}
-            disabled={!googleToken}
-            disabledHint="Conecte ao Google Drive primeiro (menu Google Drive...)"
-          />
-
           {/* ── Panel 3: Import local file → vault ── */}
           <div className="p-4 bg-vault-sidebar border border-vault-border rounded-xl space-y-3">
             <div className="flex items-start gap-2.5">
@@ -165,7 +126,7 @@ export function BackupModal({ onClose }: BackupModalProps) {
                 <p className="text-vault-text text-sm font-medium">Importar arquivo local</p>
                 <p className="text-vault-textMuted text-xs leading-relaxed">
                   Selecionar um <code className="text-vault-primary">.keep</code> e mesclar suas senhas no cofre atual
-                  {googleToken && " (sincroniza no Drive em seguida)"}
+                  {firebaseAccount && " (sincroniza a cópia criptografada na nuvem)"}
                 </p>
               </div>
             </div>
@@ -227,7 +188,7 @@ export function BackupModal({ onClose }: BackupModalProps) {
                 <Check size={14} className="text-vault-success flex-shrink-0" />
                 <p className="text-xs text-vault-success">
                   {importCount > 0
-                    ? `${importCount} senha${importCount !== 1 ? "s" : ""} importada${importCount !== 1 ? "s" : ""}${googleToken ? " · sincronizando com Drive" : ""}`
+                    ? `${importCount} senha${importCount !== 1 ? "s" : ""} importada${importCount !== 1 ? "s" : ""}${firebaseAccount ? " · sincronizando com a nuvem" : ""}`
                     : "Nenhuma senha nova encontrada (todas já existem no cofre)"}
                 </p>
               </div>

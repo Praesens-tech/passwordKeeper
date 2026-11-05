@@ -6,7 +6,7 @@
     <title>Password Keeper | Gerenciador de senhas para PC e Android</title>
     <meta
       name="description"
-      content="Organize suas senhas em um cofre criptografado no seu dispositivo. Baixe o Password Keeper para Windows, Linux, macOS e Android. Sincronize o cofre pessoal pelo Google Drive e compartilhe pelo Firebase."
+      content="Organize suas senhas em um cofre criptografado no seu dispositivo. Baixe o Password Keeper para Windows, Linux, macOS e Android. Mantenha seu cofre local, envie uma cópia criptografada à nuvem e compartilhe senhas com segurança."
     />
     <meta property="og:title" content="Password Keeper | Suas senhas organizadas" />
     <meta name="robots" content="index,follow,max-image-preview:large" />
@@ -18,31 +18,33 @@
     <meta property="og:image:alt" content="Apresentação do Password Keeper para computador e Android" />
     <meta
       property="og:description"
-      content="Gerenciador de senhas com cofre local criptografado, grupos, busca, sincronização opcional pelo Google Drive e compartilhamento seguro via Firebase."
+      content="Gerenciador de senhas com cofre local criptografado, grupos, busca, backup criptografado e compartilhamento seguro na nuvem."
     />
     <meta property="og:type" content="website" />
     <link rel="canonical" href="https://passwordkeeper.praesens.tech/" />
     <meta property="og:url" content="https://passwordkeeper.praesens.tech/" />
     <meta property="og:site_name" content="Password Keeper | Praesens.tech" />
     <meta property="og:image" content="https://passwordkeeper.praesens.tech/assets/password-keeper-hero.png" />
-    <meta name="theme-color" content="#D85A30" />
+    <meta name="theme-color" content="#4A1B0C" />
     <link rel="icon" type="image/svg+xml" href="./assets/praesens_simbolo.svg" />
-    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "Password Keeper", "url": "https://passwordkeeper.praesens.tech/", "applicationCategory": "SecurityApplication", "operatingSystem": "Windows, macOS, Linux, Android", "description": "Gerenciador de senhas com cofre local criptografado, grupos, favoritos, busca, sincronização opcional pelo Google Drive e compartilhamento seguro via Firebase.", "image": "https://passwordkeeper.praesens.tech/assets/interface-organizacao.png", "publisher": {"@type": "Organization", "name": "Praesens.tech"}, "downloadUrl": "https://passwordkeeper.praesens.tech/#downloads", "featureList": ["Cofre local criptografado", "Grupos e favoritos", "Busca de credenciais", "Gerador de senhas", "Sincronização opcional pelo Google Drive", "Compartilhamento cifrado via Firebase"]}</script>
+    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "Password Keeper", "url": "https://passwordkeeper.praesens.tech/", "applicationCategory": "SecurityApplication", "operatingSystem": "Windows, macOS, Linux, Android", "description": "Gerenciador de senhas com cofre local criptografado, grupos, favoritos, busca, backup criptografado e compartilhamento seguro na nuvem.", "image": "https://passwordkeeper.praesens.tech/assets/interface-organizacao.png", "publisher": {"@type": "Organization", "name": "Praesens.tech"}, "downloadUrl": "https://passwordkeeper.praesens.tech/#downloads", "featureList": ["Cofre local criptografado", "Grupos e favoritos", "Busca de credenciais", "Gerador de senhas", "Backup criptografado na nuvem", "Compartilhamento cifrado na nuvem"]}</script>
     <link rel="sitemap" type="application/xml" href="./sitemap.xml" />
     <style>
       :root {
         color-scheme: light dark;
-        --bg: #ffffff;
+        --bg: #FAECE7;
         --surface: #ffffff;
-        --surface-strong: #FAECE7;
+        --surface-strong: #F5C4B3;
         --text: #4A1B0C;
-        --muted: #444441;
+        --muted: #65483e;
         --line: #F5C4B3;
         --accent: #D85A30;
         --accent-strong: #993C1D;
         --accent-soft: #FAECE7;
-        --shadow: 0 24px 70px rgba(74, 27, 12, 0.12);
-        --radius: 8px;
+        --button-bg: #993C1D;
+        --button-text: #ffffff;
+        --shadow: 0 18px 48px rgba(74, 27, 12, 0.12);
+        --radius: 6px;
       }
 
       @media (prefers-color-scheme: dark) {
@@ -55,7 +57,9 @@
           --line: #993C1D;
           --accent: #D85A30;
           --accent-strong: #F0997B;
-          --accent-soft: rgba(240, 153, 123, 0.12);
+          --accent-soft: #4A1B0C;
+          --button-bg: #F0997B;
+          --button-text: #4A1B0C;
           --shadow: 0 24px 80px rgba(0, 0, 0, 0.34);
         }
       }
@@ -118,7 +122,7 @@
       .brand-mark {
         width: 36px;
         height: 36px;
-        border-radius: 12px;
+        border-radius: 6px;
         display: grid;
         place-items: center;
         background: var(--accent-soft);
@@ -152,7 +156,7 @@
       .language-toggle,
       .button {
         min-height: 42px;
-        border-radius: 999px;
+        border-radius: 6px;
         border: 1px solid var(--line);
         background: var(--surface);
         color: var(--text);
@@ -174,15 +178,15 @@
       }
 
       .button.primary {
-        border-color: var(--accent);
-        background: var(--accent);
-        color: #ffffff;
+        border-color: var(--button-bg);
+        background: var(--button-bg);
+        color: var(--button-text);
         font-weight: 700;
         font-size: 1.2rem;
       }
 
       .button.secondary {
-        background: color-mix(in srgb, var(--surface) 76%, transparent);
+        background: var(--surface);
       }
 
       .hero {
@@ -227,7 +231,7 @@
       }
 
       .hero-media img {
-        border-radius: 26px;
+        border-radius: 6px;
         box-shadow: var(--shadow);
         border: 1px solid color-mix(in srgb, var(--line) 68%, transparent);
         aspect-ratio: 16 / 10;
@@ -265,6 +269,10 @@
         padding: 82px 0;
       }
 
+      section:nth-of-type(even) { background: var(--surface); }
+      section#security { background: var(--accent-soft); }
+      section#demonstracao { border-bottom: 1px solid var(--line); }
+
       .section-title {
         max-width: 760px;
       }
@@ -273,7 +281,8 @@
         margin: 0;
         font-size: 2.75rem;
         line-height: 1;
-        letter-spacing: 0;
+        letter-spacing: -1px;
+        font-weight: 500;
       }
 
       .section-title p {
@@ -427,7 +436,7 @@
         color: var(--accent-strong);
         min-height: 38px;
         padding: 0 14px;
-        border-radius: 999px;
+        border-radius: 6px;
         display: inline-flex;
         align-items: center;
         font-weight: 720;
@@ -473,6 +482,8 @@
         border-bottom: 1px solid var(--line);
         padding: 42px;
         background: var(--accent-soft);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
         display: grid;
         grid-template-columns: 1fr auto;
         align-items: center;
@@ -610,10 +621,10 @@
 
       section[id] { scroll-margin-top: 88px; }
       a:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
-      .hero-copy h1 { max-width: 18ch; font-size: clamp(2.4rem, 4vw, 3.6rem); line-height: 1.08; }
+      .hero-copy h1 { max-width: 18ch; font-size: clamp(2.4rem, 4vw, 3.6rem); line-height: 1.08; letter-spacing: -1.5px; font-weight: 500; }
       .demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 32px; }
       .demo-grid figure { margin: 0; min-width: 0; }
-      .demo-grid img { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; }
+      .demo-grid img { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; }
       .demo-grid figcaption { margin-top: 14px; color: var(--muted); line-height: 1.6; }
       .faq-list { margin-top: 28px; }
       .faq-list details { padding: 20px 0; border-bottom: 1px solid var(--line); }
@@ -666,8 +677,8 @@
                 <span data-i18n="proofTwoText">Linux, Windows, macOS e Android.</span>
               </div>
               <div class="proof-item">
-                <strong data-i18n="proofThreeTitle">Drive sync</strong>
-                <span data-i18n="proofThreeText">Sincronização via Google Drive.</span>
+                <strong data-i18n="proofThreeTitle">Backup criptografado na nuvem</strong>
+                <span data-i18n="proofThreeText">Seu backup fica protegido na nuvem.</span>
               </div>
               <div class="proof-item">
                 <strong data-i18n="proofFourTitle">Compartilhe</strong>
@@ -722,7 +733,7 @@
               <p data-i18n="featureThreeText">Gere senhas com letras, números e símbolos, com indicador de força antes de salvar.</p>
             </article>
             <article class="feature">
-              <h3 data-i18n="featureFourTitle">Google Drive opcional</h3>
+              <h3 data-i18n="featureFourTitle">Backup na nuvem</h3>
               <p data-i18n="featureFourText">Mantenha tudo local ou sincronize o arquivo criptografado entre seus dispositivos.</p>
             </article>
             <article class="feature">
@@ -748,7 +759,7 @@
           <ul class="security-list">
             <li><strong data-i18n="securityOneStrong">Senha mestra:</strong> <span data-i18n="securityOneText">e a chave principal do seu cofre. Sem ela, o arquivo não abre.</span></li>
             <li><strong data-i18n="securityTwoStrong">Bloqueio automático:</strong> <span data-i18n="securityTwoText">se você ficar um tempo sem usar, o cofre fecha sozinho.</span></li>
-            <li><strong data-i18n="securityThreeStrong">Sincronização protegida:</strong> <span data-i18n="securityThreeText">o Google Drive guarda apenas o arquivo criptografado, não suas senhas legíveis.</span></li>
+            <li><strong data-i18n="securityThreeStrong">Sincronização protegida:</strong> <span data-i18n="securityThreeText">A nuvem guarda apenas o arquivo criptografado, não suas senhas legíveis.</span></li>
             <li><strong data-i18n="securityFourStrong">Compartilhamento controlado:</strong> <span data-i18n="securityFourText">você escolhe o que compartilhar e se a outra pessoa pode apenas ver ou também editar.</span></li>
           </ul>
         </div>
@@ -773,7 +784,7 @@
             </article>
             <article class="architecture-step">
               <h3 data-i18n="archThreeTitle">3. Use em outros dispositivos</h3>
-              <p data-i18n="archThreeText">Se quiser, conecte o Google Drive para abrir o mesmo cofre no desktop e no Android.</p>
+              <p data-i18n="archThreeText">Entre na sua conta para restaurar a cópia criptografada da nuvem em outro dispositivo.</p>
             </article>
           </div>
         </div>
@@ -837,7 +848,7 @@
             <article class="download-card">
               <div>
                 <h3 data-i18n="installTitle">Primeiro uso</h3>
-                <p data-i18n="installText">Instale, crie uma senha mestra e comece adicionando suas contas mais importantes. A sincronização pelo Drive pode ser ativada depois.</p>
+                <p data-i18n="installText">Instale, crie uma senha mestra e comece adicionando suas contas mais importantes. O backup criptografado na nuvem pode ser ativado depois.</p>
               </div>
             </article>
           </div>
@@ -848,9 +859,9 @@
         <div class="shell">
           <div class="section-title"><h2 data-i18n="faqTitle">Antes de baixar, tire suas dúvidas.</h2></div>
           <div class="faq-list">
-            <details><summary data-i18n="faqLocalQ">Preciso conectar uma conta Google?</summary><p data-i18n="faqLocalA">Não. Você pode manter seu cofre local no dispositivo. O Google Drive é uma opção para sincronizar o arquivo criptografado.</p></details>
+            <details><summary data-i18n="faqLocalQ">Preciso criar uma conta Password Keeper?</summary><p data-i18n="faqLocalA">Não. Você pode manter o cofre apenas local. Uma conta Password Keeper permite guardar uma cópia criptografada na nuvem.</p></details>
             <details><summary data-i18n="faqMasterQ">O que acontece se eu esquecer a senha mestra?</summary><p data-i18n="faqMasterA">Ela é necessária para desbloquear seu cofre. Não conte com uma recuperação por e-mail. Escolha uma senha mestra forte e mantenha uma cópia de emergência em um lugar protegido.</p></details>
-            <details><summary data-i18n="faqDataQ">Onde ficam minhas senhas?</summary><p data-i18n="faqDataA">O cofre é salvo em um arquivo .keep criptografado. Ele pode ficar no seu dispositivo ou, se você conectar o Google Drive, ser sincronizado por esse serviço. Faça cópias de segurança do arquivo.</p></details>
+            <details><summary data-i18n="faqDataQ">Onde ficam minhas senhas?</summary><p data-i18n="faqDataA">O cofre fica em um arquivo .keep criptografado no dispositivo. Se entrar na sua conta, você pode enviar uma cópia criptografada à nuvem e sincronizá-la entre dispositivos.</p></details>
             <details><summary data-i18n="faqPlatformsQ">Funciona no meu computador e no Android?</summary><p data-i18n="faqPlatformsA">Há instaladores para Windows x64, macOS Intel e Apple Silicon, Linux e Android. Não há instalador para iPhone nesta página. No Android, o download é um APK para instalação manual.</p></details>
             <details><summary data-i18n="faqInstallQ">E se aparecer um aviso durante a instalação?</summary><p data-i18n="faqInstallA">Windows e macOS podem mostrar avisos de assinatura ou notarização. No Android, a instalação de APK exige autorização para a fonte escolhida. Confira a origem do arquivo e a release oficial antes de prosseguir; se tiver dúvida, peça ajuda.</p></details>
             <details><summary data-i18n="faqTrustQ">Como conhecer o projeto e pedir ajuda?</summary><p><span data-i18n="faqTrustA">Consulte o código e a documentação pública. Para relatar uma dificuldade, informe o sistema e a versão, sem enviar senhas ou seu arquivo de cofre.</span> <a class="text-link" href="https://github.com/Praesens-tech/passwordKeeper" data-i18n="sourceCta">Ver o projeto</a> · <a class="text-link" href="https://github.com/Praesens-tech/passwordKeeper/issues/new" data-i18n="helpCta">Relatar uma dificuldade</a></p></details>
@@ -899,7 +910,7 @@
           <div>
             <h2 data-i18n="ctaTitle">Leve seu cofre para onde trabalha.</h2>
             <p data-i18n="ctaText">
-              Comece local, sincronize seu cofre pessoal pelo Drive e compartilhe pelo Firebase.
+              Comece local, envie um backup criptografado à nuvem e compartilhe com outros usuários.
             </p>
           </div>
           <a class="button primary" href="#downloads" data-i18n="ctaButton">Escolher download</a>
@@ -942,12 +953,12 @@
           demoCta: "Experimentar no meu dispositivo",
           guideCta: "Guia para começar",
           faqTitle: "Antes de baixar, tire suas dúvidas.",
-          faqLocalQ: "Preciso conectar uma conta Google?",
-          faqLocalA: "Não. Você pode manter seu cofre local no dispositivo. O Google Drive é uma opção para sincronizar o arquivo criptografado.",
+          faqLocalQ: "Preciso criar uma conta Password Keeper?",
+          faqLocalA: "Não. Você pode manter o cofre apenas local. Uma conta Password Keeper permite guardar uma cópia criptografada na nuvem.",
           faqMasterQ: "O que acontece se eu esquecer a senha mestra?",
           faqMasterA: "Ela é necessária para desbloquear seu cofre. Não conte com uma recuperação por e-mail. Escolha uma senha mestra forte e mantenha uma cópia de emergência em um lugar protegido.",
           faqDataQ: "Onde ficam minhas senhas?",
-          faqDataA: "O cofre é salvo em um arquivo .keep criptografado. Ele pode ficar no seu dispositivo ou, se você conectar o Google Drive, ser sincronizado por esse serviço. Faça cópias de segurança do arquivo.",
+          faqDataA: "O cofre fica em um arquivo .keep criptografado no dispositivo. Se entrar na sua conta, você pode enviar uma cópia criptografada à nuvem e sincronizá-la entre dispositivos.",
           faqPlatformsQ: "Funciona no meu computador e no Android?",
           faqPlatformsA: "Há instaladores para Windows x64, macOS Intel e Apple Silicon, Linux e Android. Não há instalador para iPhone nesta página. No Android, o download é um APK para instalação manual.",
           faqInstallQ: "E se aparecer um aviso durante a instalação?",
@@ -972,7 +983,7 @@
           proofOneText: "Proteção antes de salvar ou sincronizar.",
           proofTwoTitle: "4 sistemas",
           proofTwoText: "Linux, Windows, macOS e Android.",
-          proofThreeTitle: "Firebase",
+          proofThreeTitle: "Backup na nuvem",
           proofThreeText: "Compartilhamentos cifrados e sincronizados.",
           proofFourTitle: "Compartilhe",
           proofFourText: "Acesso por senha separada.",
@@ -984,10 +995,10 @@
           featureTwoText: "Use grupos, favoritos, busca, ícones e visualizações em grade ou lista para encontrar tudo rápido.",
           featureThreeTitle: "Senhas fortes",
           featureThreeText: "Gere senhas com letras, números e símbolos, com indicador de força antes de salvar.",
-          featureFourTitle: "Google Drive opcional",
+          featureFourTitle: "Backup na nuvem",
           featureFourText: "Mantenha tudo local ou sincronize o arquivo criptografado entre seus dispositivos.",
           featureFiveTitle: "Colaboração segura",
-          featureFiveText: "Compartilhe cofre, grupo ou entrada pelo Firebase, com senha separada e permissão de leitura ou edição.",
+          featureFiveText: "Compartilhe cofre, grupo ou entrada pela nuvem, com senha separada e permissão de leitura ou edição.",
           featureSixTitle: "Tudo em um só lugar",
           featureSixText: "Salve logins, sites, observações importantes e dados de acesso sem espalhar informações em planilhas ou mensagens.",
           securityTitle: "A senha mestra fica com você.",
@@ -997,7 +1008,7 @@
           securityTwoStrong: "Bloqueio automático:",
           securityTwoText: "se você ficar um tempo sem usar, o cofre fecha sozinho.",
           securityThreeStrong: "Sincronização protegida:",
-          securityThreeText: "Drive e Firebase recebem envelopes criptografados; o compartilhamento exige uma senha separada.",
+          securityThreeText: "A nuvem recebe apenas o cofre cifrado; o compartilhamento exige uma senha separada.",
           securityFourStrong: "Compartilhamento controlado:",
           securityFourText: "você escolhe o que compartilhar e se a outra pessoa pode apenas ver ou também editar.",
           architectureTitle: "Como funciona na prática.",
@@ -1007,7 +1018,7 @@
           archTwoTitle: "2. Cadastre suas contas",
           archTwoText: "Organize por grupos, favorite os acessos importantes e encontre tudo pela busca.",
           archThreeTitle: "3. Use em outros dispositivos",
-          archThreeText: "Se quiser, conecte o Google Drive para abrir o mesmo cofre no desktop e no Android.",
+          archThreeText: "Entre na sua conta para restaurar a cópia criptografada da nuvem em outro dispositivo.",
           downloadCountLabel: "downloads de instaladores",
           downloadCountLoading: "Consultando o GitHub…",
           downloadCountSource: "Total de todas as versões públicas · Fonte: GitHub",
@@ -1021,14 +1032,14 @@
           chooseTitle: "Qual arquivo escolher?",
           chooseText: "Windows: use EXE. macOS: escolha Apple Silicon para Macs novos ou Intel para Macs antigos. Linux: comece pelo AppImage.",
           installTitle: "Primeiro uso",
-          installText: "Instale, crie uma senha mestra e comece adicionando suas contas mais importantes. A sincronização pelo Drive pode ser ativada depois.",
+          installText: "Instale, crie uma senha mestra e comece adicionando suas contas mais importantes. O backup criptografado na nuvem pode ser ativado depois.",
           historyTitle: "Histórico de versões",
           historyText: "Acompanhe as melhorias principais disponíveis para download.",
           historyLatest: "Versão atual",
           historyCurrent: "Downloads para Windows, macOS, Linux e Android, com página simples para usuários finais.",
           historyPublished: "Versão publicada para Windows, macOS, Linux e Android.",
           ctaTitle: "Leve seu cofre para onde trabalha.",
-          ctaText: "Comece local, sincronize seu cofre pessoal pelo Drive e compartilhe pelo Firebase.",
+          ctaText: "Comece local, envie um backup criptografado à nuvem e compartilhe com outros usuários.",
           ctaButton: "Escolher download",
           footerText: "Cofre de senhas criptografado para desktop e Android."
         },
@@ -1040,12 +1051,12 @@
           demoCta: "Try it on my device",
           guideCta: "Getting started guide (Portuguese)",
           faqTitle: "Your questions, before you download.",
-          faqLocalQ: "Do I need to connect a Google account?",
-          faqLocalA: "No. You can keep your vault locally on your device. Google Drive is optional for syncing the encrypted file.",
+          faqLocalQ: "Do I need a Password Keeper account?",
+          faqLocalA: "No. You can keep your vault only on your device. A Password Keeper account lets you store an encrypted copy in the cloud.",
           faqMasterQ: "What if I forget the master password?",
           faqMasterA: "It is required to unlock your vault. Do not rely on email recovery. Choose a strong master password and keep an emergency copy in a protected place.",
           faqDataQ: "Where are my passwords stored?",
-          faqDataA: "The vault is stored in an encrypted .keep file. It can stay on your device or sync through Google Drive if you connect it. Keep backups of the file.",
+          faqDataA: "The vault stays in an encrypted .keep file on your device. You can sign in to store and sync an encrypted copy in the cloud.",
           faqPlatformsQ: "Does it work on my computer and Android?",
           faqPlatformsA: "Installers are available for Windows x64, Intel and Apple Silicon Macs, Linux, and Android. This page has no iPhone installer. Android uses an APK for manual installation.",
           faqInstallQ: "What if an installation warning appears?",
@@ -1070,7 +1081,7 @@
           proofOneText: "Protected before saving or syncing.",
           proofTwoTitle: "4 systems",
           proofTwoText: "Linux, Windows, macOS, and Android.",
-          proofThreeTitle: "Firebase",
+          proofThreeTitle: "Cloud backup",
           proofThreeText: "Encrypted sharing with live sync.",
           proofFourTitle: "Share",
           proofFourText: "Access with a separate password.",
@@ -1082,10 +1093,10 @@
           featureTwoText: "Use groups, favorites, search, icons, and grid or list views to find everything fast.",
           featureThreeTitle: "Strong passwords",
           featureThreeText: "Generate passwords with letters, numbers, and symbols, with strength feedback before saving.",
-          featureFourTitle: "Optional Google Drive",
+          featureFourTitle: "Encrypted cloud backup",
           featureFourText: "Keep everything local or sync the encrypted file across your devices.",
           featureFiveTitle: "Secure collaboration",
-          featureFiveText: "Share a vault, group, or entry through Firebase with a separate password and read or edit access.",
+          featureFiveText: "Share a vault, group, or entry through the cloud with a separate password and read or edit access.",
           featureSixTitle: "Everything in one place",
           featureSixText: "Save logins, sites, important notes, and access details without spreading information across spreadsheets or messages.",
           securityTitle: "The master password stays with you.",
@@ -1095,7 +1106,7 @@
           securityTwoStrong: "Auto-lock:",
           securityTwoText: "the vault closes by itself after a period without use.",
           securityThreeStrong: "Protected sync:",
-          securityThreeText: "Drive and Firebase receive encrypted envelopes; sharing also requires a separate password.",
+          securityThreeText: "The cloud stores only the encrypted vault; sharing also requires a separate password.",
           securityFourStrong: "Controlled sharing:",
           securityFourText: "you choose what to share and whether the other person can only view or also edit.",
           architectureTitle: "How it works in practice.",
@@ -1105,7 +1116,7 @@
           archTwoTitle: "2. Add your accounts",
           archTwoText: "Organize by groups, mark important accounts as favorites, and find everything with search.",
           archThreeTitle: "3. Use it on other devices",
-          archThreeText: "If you want, connect Google Drive to open the same vault on desktop and Android.",
+          archThreeText: "Sign in to restore the encrypted cloud copy on desktop and Android.",
           downloadCountLabel: "installer downloads",
           downloadCountLoading: "Checking GitHub…",
           downloadCountSource: "Total across all public releases · Source: GitHub",
@@ -1119,14 +1130,14 @@
           chooseTitle: "Which file should I choose?",
           chooseText: "Windows: use EXE. macOS: choose Apple Silicon for newer Macs or Intel for older Macs. Linux: start with AppImage.",
           installTitle: "First use",
-          installText: "Install it, create a master password, and start by adding your most important accounts. Drive sync can be enabled later.",
+          installText: "Install it, create a master password, and start by adding your most important accounts. Encrypted cloud backup can be enabled later.",
           historyTitle: "Version history",
           historyText: "Follow the main improvements available for download.",
           historyLatest: "Current version",
           historyCurrent: "Downloads for Windows, macOS, Linux, and Android, with a simpler page for everyday users.",
           historyPublished: "Published version for Windows, macOS, Linux, and Android.",
           ctaTitle: "Take your vault where you work.",
-          ctaText: "Start locally, sync your personal vault with Drive, and share through Firebase.",
+          ctaText: "Start locally, send an encrypted backup to the cloud, and share with other users.",
           ctaButton: "Choose download",
           footerText: "Encrypted password vault for desktop and Android."
         }

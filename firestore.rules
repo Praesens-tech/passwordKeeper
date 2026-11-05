@@ -1,6 +1,27 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    match /personalVaults/{userId} {
+      allow read: if request.auth != null
+        && request.auth.uid == userId
+        && request.auth.token.email_verified == true;
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && request.auth.token.email_verified == true
+        && request.resource.data.email is string
+        && request.resource.data.revision == 1
+        && request.resource.data.keys().hasOnly(['ciphertext', 'email', 'revision', 'updatedAt']);
+      allow update: if request.auth != null
+        && request.auth.uid == userId
+        && request.auth.token.email_verified == true
+        && request.resource.data.email is string
+        && request.resource.data.revision == resource.data.revision + 1
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ciphertext', 'email', 'revision', 'updatedAt']);
+      allow delete: if request.auth != null
+        && request.auth.uid == userId
+        && request.auth.token.email_verified == true;
+    }
+
     match /sharedVaults/{vaultId} {
       function signedIn() {
         return request.auth != null;

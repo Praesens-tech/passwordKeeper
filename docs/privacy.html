@@ -1,62 +1,63 @@
 <!doctype html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Política de privacidade — Password Keeper</title>
-    <meta name="description" content="Como o Password Keeper acessa, usa, armazena e compartilha dados, incluindo os dados do Google Drive." />
-    <link rel="canonical" href="https://passwordkeeper.praesens.tech/privacy.html" />
-    <link rel="icon" type="image/svg+xml" href="./assets/praesens_simbolo.svg" />
-    <style>
-      :root { color-scheme: light dark; }
-      * { box-sizing: border-box; }
-      body { margin: 0; background: #faf5f2; color: #342019; font: 1rem/1.7 system-ui, sans-serif; }
-      main { max-width: 840px; margin: auto; padding: 32px 20px 64px; }
-      h1, h2 { line-height: 1.25; }
-      h1 { font-size: clamp(1.8rem, 5vw, 2.6rem); }
-      h2 { margin-top: 2rem; font-size: 1.3rem; }
-      a { color: #903811; overflow-wrap: anywhere; }
-      .date { color: #68574f; }
-      @media (prefers-color-scheme: dark) {
-        body { background: #17120f; color: #f5ece6; }
-        a { color: #ffb18b; }
-        .date { color: #cbb8ad; }
-      }
-    </style>
-  </head>
-  <body>
-    <main>
-      <a href="./">← Password Keeper</a>
-      <h1>Política de privacidade</h1>
-      <p class="date">Atualizada em 4 de novembro de 2026.</p>
-      <p>Esta política descreve o tratamento de dados pelo Password Keeper, aplicativo de cofre de senhas para desktop e Android mantido no projeto Praesens-tech/passwordKeeper. Contato do desenvolvedor: <a href="mailto:mpblima@gmail.com">mpblima@gmail.com</a>.</p>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Política de privacidade — Password Keeper</title>
+  <meta name="description" content="Como o Password Keeper armazena cofres locais, contas, backups criptografados e compartilhamentos na nuvem.">
+  <link rel="canonical" href="https://passwordkeeper.praesens.tech/privacy.html">
+  <link rel="icon" type="image/svg+xml" href="./assets/praesens_simbolo.svg">
+  <meta name="theme-color" content="#4A1B0C">
+  <style>
+    :root { color-scheme: light dark; --bg:#FAECE7; --surface:#fff; --text:#4A1B0C; --muted:#65483e; --line:#F5C4B3; --accent:#993C1D; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.75 Arial, Helvetica, sans-serif; }
+    .site-header { border-bottom:1px solid var(--line); background:var(--surface); }
+    .site-nav { width:min(1120px,calc(100% - 40px)); min-height:78px; margin:auto; display:flex; align-items:center; justify-content:space-between; gap:24px; }
+    .brand { display:flex; align-items:center; gap:12px; color:var(--text); text-decoration:none; font-weight:700; line-height:1.15; }
+    .brand img { width:36px; height:39px; object-fit:contain; }
+    .brand small { display:block; margin-top:5px; color:var(--muted); font-size:11px; font-weight:400; letter-spacing:.4px; }
+    .site-links { display:flex; flex-wrap:wrap; gap:20px; }
+    .site-links a, a { color:var(--accent); text-underline-offset:4px; overflow-wrap:anywhere; }
+    main { width:min(920px,calc(100% - 40px)); margin:48px auto 64px; padding:clamp(26px,6vw,64px); border:1px solid var(--line); border-radius:6px; background:var(--surface); }
+    h1, h2 { line-height:1.2; letter-spacing:-.5px; font-weight:500; }
+    h1 { margin:0; font-size:clamp(2rem,5vw,3.25rem); }
+    h2 { margin-top:2.3rem; font-size:1.35rem; }
+    .date { margin:12px 0 30px; color:var(--muted); font-size:.9rem; }
+    footer { width:min(920px,calc(100% - 40px)); margin:0 auto; padding:0 0 36px; color:var(--muted); font-size:.85rem; }
+    a:focus-visible { outline:3px solid #D85A30; outline-offset:4px; }
+    @media (prefers-color-scheme: dark) { :root { --bg:#4A1B0C; --surface:#4A1B0C; --text:#FAECE7; --muted:#F5C4B3; --line:#993C1D; --accent:#F0997B; } }
+    @media (max-width:640px) { .site-nav { width:calc(100% - 28px); min-height:68px; gap:12px; } .site-links { gap:10px; font-size:.8rem; } main { width:calc(100% - 28px); margin:24px auto 40px; } footer { width:calc(100% - 28px); } }
+  </style>
+</head>
+<body>
+<header class="site-header"><nav class="site-nav" aria-label="Navegação do site"><a class="brand" href="./"><img src="./assets/praesens_simbolo.svg" alt=""><span>Password Keeper<small>Praesens.tech</small></span></a><div class="site-links"><a href="./#downloads">Downloads</a><a href="./como-organizar-senhas.html">Guia</a></div></nav></header>
+<main>
+  <h1>Política de privacidade</h1>
+  <p class="date">Atualizada em 5 de novembro de 2026.</p>
+  <p>Esta política descreve o tratamento de dados pelo Password Keeper para desktop e Android, mantido em Praesens-tech/passwordKeeper. Contato: <a href="mailto:mpblima@gmail.com">mpblima@gmail.com</a>.</p>
 
-      <h2>1. Cofre e armazenamento local</h2>
-      <p>As informações inseridas no cofre são processadas no dispositivo. O aplicativo criptografa o conteúdo com AES-256-GCM antes de gravá-lo em arquivos <code>.keep</code>, enviá-lo ao Google Drive como sincronização opcional do cofre pessoal ou salvá-lo no Firestore para compartilhamento. A senha mestra é usada no dispositivo para derivar a chave de criptografia e não é enviada ao Google, ao Firebase ou ao desenvolvedor. O conteúdo descriptografado permanece na memória durante o uso do cofre.</p>
-      <p>O dispositivo também armazena configurações, referências dos arquivos, informações da conta conectada e tokens OAuth usados para acessar o Drive. Os tokens são persistidos no armazenamento de configuração do aplicativo, separados do cofre, e não no localStorage do WebView. Esses tokens permitem acesso às APIs autorizadas e devem ser protegidos junto com o dispositivo.</p>
+  <h2>1. Cofre local e criptografia</h2>
+  <p>As senhas são processadas no dispositivo e salvas localmente em arquivos .keep criptografados com AES-256-GCM. A senha mestra é usada no dispositivo para derivar a chave; ela não é enviada aos serviços de nuvem nem ao desenvolvedor. O conteúdo descriptografado permanece na memória enquanto o cofre está aberto.</p>
 
-      <h2>2. Dados do Google e finalidade do acesso</h2>
-      <p>A conexão ao Google é opcional. Ao conectar uma conta, o aplicativo usa o endereço de e-mail e os dados de perfil disponibilizados pela API para identificar a conta conectada e a autoria dos compartilhamentos. Usa tokens de acesso e de renovação para autenticar as solicitações e manter a sincronização autorizada.</p>
-      <p>A versão atual solicita o escopo <code>https://www.googleapis.com/auth/drive</code>, que tecnicamente permite acesso amplo aos arquivos do Drive. No funcionamento do Password Keeper, esse acesso é usado para localizar, ler e atualizar o arquivo criptografado do cofre pessoal e detectar alterações para sincronização. O aplicativo não cria nem lê arquivos de compartilhamento ou permissões de colaboração no Drive. O escopo <code>https://www.googleapis.com/auth/userinfo.email</code> é usado para identificar a conta. A autenticação Google também fornece ao Firebase a identidade necessária para controlar o acesso aos compartilhamentos.</p>
-      <p>As solicitações às APIs do Google são feitas pelo aplicativo no dispositivo. O aplicativo envia envelopes cifrados e metadados de acesso ao Firebase/Firestore para compartilhar cofres, grupos ou senhas. O Firebase também processa a identidade autenticada. O Google recebe solicitações à sua API e armazena os arquivos criptografados do cofre pessoal, nomes e metadados no Drive da conta correspondente.</p>
+  <h2>2. Conta e serviços de nuvem</h2>
+  <p>Para usar backup na nuvem ou compartilhamentos, o usuário cria uma conta Password Keeper com e-mail e senha e confirma o endereço de e-mail. Um serviço de autenticação processa essas credenciais e mantém a identidade da conta. A sessão de autenticação fica apenas em memória durante o uso do app.</p>
+  <p>O usuário pode enviar uma cópia do cofre ao armazenamento na nuvem. O aplicativo criptografa o conteúdo antes do envio; o serviço guarda o envelope cifrado, uma revisão e o identificador da conta proprietária. Compartilhamentos guardam também os e-mails e identificadores necessários para controlar quem pode acessar cada documento. A senha mestra e o conteúdo do cofre em texto claro não são enviados.</p>
+  <p>Compartilhamentos são documentos separados, criptografados no dispositivo. O remetente define uma senha de compartilhamento que deve ser entregue ao destinatário por um canal seguro. Não compartilhe essa senha junto do link ou convite.</p>
 
-      <h2>3. Compartilhamento</h2>
-      <p>Ao solicitar um compartilhamento, o aplicativo envia ao Firebase o ciphertext do escopo autorizado, o e-mail do proprietário, o e-mail do destinatário e a permissão escolhida. O conteúdo é criptografado no dispositivo em um documento separado com AES-256-GCM. A senha mestra do cofre principal não é compartilhada; uma senha de compartilhamento separada é necessária para abrir o documento. O destinatário precisa entrar no app com o e-mail Google autorizado e fornecer essa senha. O Firestore armazena o documento cifrado e os e-mails necessários para controlar o acesso; não recebe o conteúdo em texto claro nem a senha de compartilhamento.</p>
-      <p>O desenvolvedor não recebe automaticamente acesso aos cofres. O uso dos dados obtidos das APIs do Google é limitado às funcionalidades de cofre, identidade, sincronização e colaboração descritas nesta política; esses dados não são vendidos, usados para publicidade personalizada ou para treinamento de modelos de inteligência artificial de uso geral.</p>
+  <h2>3. Sincronização entre dispositivos</h2>
+  <p>Quando o usuário entra na mesma conta e abre o cofre com a senha mestra correta, o app pode baixar e descriptografar a cópia pessoal armazenada na nuvem. Alterações podem sincronizar para essa cópia enquanto a sessão da conta estiver ativa. O arquivo local continua sendo uma cópia independente.</p>
 
-      <h2>4. Retenção, desconexão e exclusão</h2>
-      <p>Os arquivos locais e no Drive permanecem nos locais escolhidos até serem removidos pelo usuário. O documento cifrado de compartilhamento permanece no Firestore até ser excluído pelo proprietário no Firebase Console. Remover um colaborador revoga o acesso dele, mas não apaga o documento. Desconectar a conta no aplicativo remove a referência local ao token e às informações da conta, mas não exclui automaticamente arquivos locais, backups, documentos do Firestore ou arquivos do Drive, nem revoga por si só a autorização no Google.</p>
-      <p>Para revogar o acesso Google, acesse as <a href="https://myaccount.google.com/connections">conexões da sua Conta do Google</a> e remova o acesso do Password Keeper. O proprietário pode remover o acesso de um colaborador pelo app; para apagar permanentemente o documento cifrado, exclua-o no Firebase Console. Arquivos <code>.keep</code> e backups no Drive são removidos separadamente. No Drive, observe também a lixeira e as regras de retenção da sua conta. Excluir uma cópia não apaga cópias que destinatários já tenham exportado ou guardado.</p>
+  <h2>4. Retenção e exclusão</h2>
+  <p>O arquivo local permanece no dispositivo até ser removido pelo usuário. Backups e documentos compartilhados permanecem no armazenamento remoto até serem excluídos. O app ainda não oferece exclusão de conta e de todos os dados na nuvem; para solicitar a exclusão da conta e dos documentos associados, escreva para <a href="mailto:mpblima@gmail.com">mpblima@gmail.com</a> usando o e-mail da conta. A remoção de um compartilhamento revoga o acesso futuro, mas não apaga cópias que outros participantes já tenham exportado.</p>
 
-      <h2>5. Atualizações e site</h2>
-      <p>O aplicativo pode consultar releases no GitHub para verificar atualizações e abrir links no navegador do sistema. O GitHub processa essas conexões conforme a sua <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">política de privacidade</a>; o conteúdo do cofre não faz parte da consulta de atualização.</p>
-      <p>Este site é hospedado no GitHub Pages e consulta contagens públicas de downloads das releases. O provedor de hospedagem e as APIs consultadas podem receber informações técnicas da conexão, como o endereço IP. O site não solicita o conteúdo do cofre ou a senha mestra.</p>
+  <h2>5. Atualizações e site</h2>
+  <p>O app pode consultar as releases no GitHub para verificar atualizações e abrir links no navegador do sistema. O GitHub processa essas conexões conforme sua <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">política de privacidade</a>; o conteúdo do cofre não é enviado nessas consultas.</p>
+  <p>O site é hospedado no GitHub Pages. A hospedagem pode receber informações técnicas da conexão, como endereço IP. O site não solicita senhas mestras nem conteúdo do cofre.</p>
 
-      <h2>6. Uso limitado dos dados do Google</h2>
-      <p>O uso e a transferência de informações recebidas das APIs do Google pelo Password Keeper seguem a <a href="https://developers.google.com/terms/api-services-user-data-policy">Política de Dados do Usuário dos Serviços de API do Google</a>, incluindo os requisitos de Uso Limitado (Limited Use).</p>
-
-      <h2>7. Contato e alterações</h2>
-      <p>Para dúvidas sobre os dados tratados pelo aplicativo ou solicitações de privacidade, entre em contato pelo e-mail <a href="mailto:mpblima@gmail.com">mpblima@gmail.com</a>. Não envie senhas, tokens OAuth ou o conteúdo do seu cofre no pedido. Alterações nesta política serão publicadas nesta página com a data de atualização.</p>
-    </main>
-  </body>
+  <h2>6. Contato</h2>
+  <p>Para dúvidas ou solicitações de privacidade, escreva para <a href="mailto:mpblima@gmail.com">mpblima@gmail.com</a>. Não envie sua senha mestra, senha da conta ou conteúdo do cofre.</p>
+</main>
+<footer>Password Keeper · Praesens.tech · <a href="./">Página inicial</a></footer>
+</body>
 </html>

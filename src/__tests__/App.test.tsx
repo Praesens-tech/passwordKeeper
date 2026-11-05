@@ -14,21 +14,16 @@ vi.mock('../components/AppMenuBar', () => ({ AppMenuBar: () => <nav>Menu</nav> }
 vi.mock('../components/PasswordForm', () => ({ PasswordForm: () => <div>Form</div> }));
 vi.mock('../hooks/usePlatform', () => ({ usePlatform: () => ({ isAndroid: false }) }));
 
-describe('App Component - Auto Lock & Polling', () => {
+describe('App Component - Auto Lock', () => {
   const makeState = (overrides: Record<string, unknown> = {}) => ({
     isLocked: false,
     isDirty: false,
     isSyncing: false,
     syncError: null,
     vault: { entries: [], groups: [], sharedWith: [], deletionRequests: [], owner: 'test@example.com', version: '1.0' },
-    googleToken: null,
     localVaultPath: null,
-    driveFileId: null,
-    syncToCloud: vi.fn(),
     saveToLocalFile: vi.fn(),
     initFromStorage: vi.fn().mockResolvedValue(undefined),
-    initDriveChangesToken: vi.fn().mockResolvedValue(undefined),
-    pollDriveChanges: vi.fn().mockResolvedValue(false),
     forceSync: vi.fn(),
     clearSyncError: vi.fn(),
     lockVault: vi.fn(),
@@ -100,25 +95,4 @@ describe('App Component - Auto Lock & Polling', () => {
     expect(state.lockVault).not.toHaveBeenCalled();
   });
 
-  it('should call pollDriveChanges on interval when Drive is connected', () => {
-    state = makeState({ googleToken: { access_token: 'tok', expires_at: Date.now() + 3600000, token_type: 'Bearer' } });
-    vi.mocked(useVaultStore).mockImplementation(() => state as any);
-    (useVaultStore as any).getState = vi.fn(() => state);
-
-    render(<App />);
-
-    act(() => { vi.advanceTimersByTime(5000); });
-    expect(state.pollDriveChanges).toHaveBeenCalledTimes(1);
-
-    act(() => { vi.advanceTimersByTime(5000); });
-    expect(state.pollDriveChanges).toHaveBeenCalledTimes(2);
-  });
-
-  it('should NOT call pollDriveChanges when Drive is not connected', () => {
-    // googleToken: null (default state)
-    render(<App />);
-
-    act(() => { vi.advanceTimersByTime(15000); });
-    expect(state.pollDriveChanges).not.toHaveBeenCalled();
-  });
 });

@@ -57,7 +57,7 @@ export interface PasswordGroup {
 }
 
 export interface VaultData {
-  /** User-facing vault name, also used for the Google Drive .keep filename. */
+  /** User-facing vault name, used for the local file and cloud backup label. */
   name?: string;
   version: string;
   owner: string;
@@ -71,7 +71,7 @@ export interface VaultData {
 export interface SharedSource {
   id: string;
   fileId: string;
-  backend?: "drive" | "firebase";
+  backend?: "firebase";
   name: string;
   owner: string;
   role: VaultPermission;
@@ -88,14 +88,6 @@ export interface SharedSource {
   updatedAt?: string;
   groups: PasswordGroup[];
   entries: PasswordEntry[];
-}
-
-export interface GoogleToken {
-  access_token: string;
-  refresh_token?: string;
-  expires_at: number;
-  token_type: string;
-  client_id?: string;
 }
 
 export type ViewMode = "grid" | "list";

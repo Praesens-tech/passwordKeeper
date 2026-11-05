@@ -29,7 +29,7 @@ describe('ShareModal Component', () => {
   beforeEach(() => {
     vi.mocked(useVaultStore).mockReturnValue({
       vault: mockVault,
-      googleToken: { access_token: 'token', expires_at: Date.now() + 3600000, token_type: 'Bearer' },
+      firebaseAccount: { uid: 'owner-uid', email: 'owner@example.com', emailVerified: true },
       createSharedDocument,
     } as any);
   });
@@ -80,7 +80,7 @@ describe('ShareModal Component', () => {
   });
 
   it('should show error screen when createSharedDocument throws', async () => {
-    createSharedDocument.mockRejectedValueOnce(new Error('Drive não conectado'));
+    createSharedDocument.mockRejectedValueOnce(new Error('Firebase indisponível'));
 
     render(<ShareModal target={mockTarget} type="entry" onClose={vi.fn()} />);
 
@@ -98,13 +98,13 @@ describe('ShareModal Component', () => {
     });
 
     expect(await screen.findByText('Erro ao compartilhar')).toBeInTheDocument();
-    expect(screen.getByText(/Drive não conectado/)).toBeInTheDocument();
+    expect(screen.getByText(/Firebase indisponível/)).toBeInTheDocument();
   });
 
-  it('should disable share button when no Google token', () => {
+  it('should disable share button when no Firebase account is connected', () => {
     vi.mocked(useVaultStore).mockReturnValue({
       vault: mockVault,
-      googleToken: null,
+      firebaseAccount: null,
       createSharedDocument,
     } as any);
 

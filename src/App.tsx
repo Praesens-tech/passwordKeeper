@@ -8,22 +8,16 @@ import { AppMenuBar } from "./components/AppMenuBar";
 import { Cloud, RefreshCw, AlertCircle, X } from "lucide-react";
 import { usePlatform } from "./hooks/usePlatform";
 import { checkForAppUpdate } from "./services/autoUpdate";
-import { watchFirebaseVault } from "./services/firebase";
-
-// Intervalo de polling da Drive Changes API (ms).
-// A Changes API é eficiente — retorna rapidamente sem mudanças (sem custo de download).
-const DRIVE_POLL_INTERVAL_MS = 5000;
+import { watchFirebaseVault, watchPersonalFirebaseVault } from "./services/firebase";
 
 export function App() {
   const { isAndroid } = usePlatform();
   const {
     isLocked, isDirty, isSyncing, syncError, vault, masterPassword, userInfo,
-    googleToken, localVaultPath, driveFileId,
+    localVaultPath,
     sharedSources,
-    firebaseVaultId, firebaseAuthenticated,
-    syncToCloud, saveToLocalFile, initFromStorage,
-    pollDriveChanges, initDriveChangesToken,
-    linkFirebaseVault,
+    firebaseAuthenticated, firebaseAccount,
+    saveToLocalFile, initFromStorage,
     restoreOwnedFirebaseShares,
     forceSync, clearSyncError, lockVault,
   } = useVaultStore();
@@ -53,50 +47,32 @@ export function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Obtém o changesToken do Drive assim que o cofre é desbloqueado com Drive conectado.
-  // Sem esse token o polling não consegue detectar mudanças.
-  useEffect(() => {
-    if (isLocked || !googleToken) return;
-    initDriveChangesToken().catch(() => {});
-  }, [isLocked, googleToken]);
-
-  // Recreate the in-memory Firebase session from the existing Google token,
-  // then discover the document created during migration.
-  useEffect(() => {
-    if (isLocked || !googleToken || firebaseAuthenticated || (!firebaseVaultId && !driveFileId)) return;
-    linkFirebaseVault().catch(() => {});
-  }, [isLocked, googleToken, firebaseAuthenticated, firebaseVaultId, driveFileId, linkFirebaseVault]);
-
   useEffect(() => {
     if (isLocked) {
       firebaseRestoreStartedRef.current = null;
       return;
     }
-    if (!googleToken) {
+    if (!firebaseAccount) {
       firebaseRestoreStartedRef.current = null;
       return;
     }
-    const account = userInfo?.email?.trim().toLowerCase() ?? "unknown-account";
+    const account = firebaseAccount.email.trim().toLowerCase();
     if (!masterPassword || !vault || firebaseRestoreStartedRef.current === account) return;
     firebaseRestoreStartedRef.current = account;
     restoreOwnedFirebaseShares().catch((error) => {
       if (firebaseRestoreStartedRef.current === account) firebaseRestoreStartedRef.current = null;
       useVaultStore.setState({ syncError: String(error) });
     });
-  }, [isLocked, googleToken, masterPassword, vault, userInfo?.email, restoreOwnedFirebaseShares]);
+  }, [isLocked, firebaseAccount, masterPassword, vault, restoreOwnedFirebaseShares]);
 
   useEffect(() => {
-    if (isLocked || !firebaseAuthenticated || !firebaseVaultId) return;
-    return watchFirebaseVault(
-      firebaseVaultId,
-      (document) => {
-        useVaultStore.getState().applyFirebaseVaultSnapshot(document).catch((error) => {
-          useVaultStore.setState({ syncError: String(error) });
-        });
-      },
-      (error) => useVaultStore.setState({ syncError: String(error) }),
-    );
-  }, [isLocked, firebaseAuthenticated, firebaseVaultId]);
+    if (isLocked || !firebaseAccount) return;
+    return watchPersonalFirebaseVault(firebaseAccount.uid, (snapshot) => {
+      useVaultStore.getState().applyFirebaseBackupSnapshot(snapshot).catch((error) => {
+        useVaultStore.setState({ syncError: String(error) });
+      });
+    }, (error) => useVaultStore.setState({ syncError: String(error) }));
+  }, [isLocked, firebaseAccount]);
 
   useEffect(() => {
     if (isLocked || !firebaseAuthenticated) return;
@@ -119,9 +95,7 @@ export function App() {
   }, [isLocked, firebaseAuthenticated, sharedSources]);
 
   // ── Auto-save ──────────────────────────────────────────────────────────────
-  // Salva localmente e/ou no Drive 5s após a última alteração.
-  // Não sincroniza para o Drive quando o proprietário abriu um vault colaborativo
-  // (isso sobrescreveria o arquivo compartilhado com a senha mestra errada).
+  // Salva localmente e sincroniza uma cópia cifrada na nuvem quando há uma conta conectada.
   useEffect(() => {
     if (!isDirty) return;
     if (autoSyncTimerRef.current) clearTimeout(autoSyncTimerRef.current);
@@ -132,38 +106,14 @@ export function App() {
       if (localVaultPath || isAndroid) {
         saveToLocalFile(localVaultPath ?? undefined).catch(() => {});
       }
-      if (googleToken && !isOwnerOfCollabVault) {
-        syncToCloud().catch(() => {});
-      }
-      if (state.firebaseVaultId && !isOwnerOfCollabVault) {
+      if (firebaseAccount && !isOwnerOfCollabVault) {
         state.syncToFirebase().catch(() => {});
       }
     }, 5000);
     return () => {
       if (autoSyncTimerRef.current) clearTimeout(autoSyncTimerRef.current);
     };
-  }, [isDirty, googleToken, localVaultPath, isAndroid]);
-
-  // ── Polling Drive Changes API ──────────────────────────────────────────────
-  // Um único setInterval substitui os dois intervalos anteriores (10s vault + 3s shares).
-  // A Changes API retorna apenas os fileIds alterados — zero downloads desnecessários.
-  // Isso cobre tanto o cofre principal quanto todos os documentos compartilhados.
-  useEffect(() => {
-    if (isLocked || !googleToken) return;
-
-    const tick = () => {
-      pollDriveChanges()
-        .then((notice) => {
-          if (!notice) return;
-          setSharedNotice(notice);
-          setTimeout(() => setSharedNotice(""), 4000);
-        })
-        .catch(() => {});
-    };
-
-    const timer = setInterval(tick, DRIVE_POLL_INTERVAL_MS);
-    return () => clearInterval(timer);
-  }, [isLocked, googleToken, pollDriveChanges]);
+  }, [isDirty, firebaseAccount, localVaultPath, isAndroid]);
 
   // ── Auto-lock por inatividade (5 min) ────────────────────────────────────
   useEffect(() => {

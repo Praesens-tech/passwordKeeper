@@ -8,10 +8,10 @@ Checklist para promover o Password Keeper de beta para versão pública (v1.0).
 
 - [x] Build web validado (`npm run build` — zero erros TypeScript)
 - [x] Backend Tauri validado (`cargo check`)
-- [x] 28 testes automatizados passando (criptografia, compartilhamento, auto-lock, polling)
+- [ ] Testes automatizados executados para conta Firebase e backup pessoal
 - [x] Auditoria npm sem vulnerabilidades em dependências de produção (`npm audit --omit=dev`)
-- [x] Compartilhamento colaborativo no Firebase/Firestore com envelope multi-slot e permissão por e-mail Google verificado
-- [x] Sincronização quasi-realtime do cofre pessoal via Drive Changes API; compartilhamentos usam listener Firestore
+- [ ] Backup pessoal criptografado no Firestore com conta e e-mail verificado
+- [x] Compartilhamento colaborativo no Firebase/Firestore com envelope multi-slot e controle de acesso
 - [x] Pipeline de segurança CI: npm audit + Gitleaks por PR; PR Gating Aikido no dashboard
 - [x] Workflow de release por tag `v*` configurado para Linux, Windows, macOS, Android
 
@@ -22,9 +22,6 @@ Checklist para promover o Password Keeper de beta para versão pública (v1.0).
 ### Infraestrutura (requer ação humana)
 
 - [ ] Configurar GitHub Secrets:
-  - `VITE_GOOGLE_CLIENT_ID`
-  - `VITE_GOOGLE_CLIENT_SECRET`
-  - `VITE_GOOGLE_ANDROID_CLIENT_ID`
   - `ANDROID_KEYSTORE_B64` — keystore Android em Base64 (`base64 -w0 release.jks`)
   - `ANDROID_KEY_ALIAS`, `ANDROID_STORE_PASSWORD`, `ANDROID_KEY_PASSWORD`
 
@@ -37,21 +34,12 @@ Checklist para promover o Password Keeper de beta para versão pública (v1.0).
 - [ ] Configurar assinatura macOS: Developer ID + notarização no workflow (`release.yml`)
 - [ ] Avaliar assinatura Windows: certificado EV se distribuição via store/download direto
 
-### OAuth Google (requer ação humana)
-
-- [ ] Criar OAuth Client ID de produção:
-  - Desktop: redirect `http://localhost:8899`
-  - Android: package `com.passwordkeeper.vault` + SHA-1 da keystore final
-
-- [ ] Decidir escopo OAuth:
-  - **Manter `drive`** → completar verificação de segurança do Google (semanas)
-  - **Migrar para `drive.file`** → implementar Google Picker (elimina verificação)
-  - **Importação por arquivo** → sem listagem global, sem verificação necessária
-
-- [ ] Publicar política de privacidade (URL pública obrigatória para OAuth)
+- [x] Habilitar Firebase Authentication por e-mail/senha e publicar regras Firestore
+- [ ] Configurar política Firebase de senha forte no servidor
+- [ ] Ativar MFA TOTP no Firebase Authentication com Identity Platform
+- [ ] Publicar política de privacidade
 - [ ] Publicar termos de uso
 - [ ] Página de suporte com e-mail de contato
-- [ ] Submeter verificação OAuth (ou limitar a ≤100 usuários de teste)
 
 ---
 
@@ -77,8 +65,8 @@ npm run tauri build
 - [ ] Criar cofre novo
 - [ ] Salvar local (`.keep`)
 - [ ] Abrir cofre local
-- [ ] Conectar Google Drive para o cofre pessoal (opcional)
-- [ ] Salvar cofre pessoal no Drive
+- [ ] Criar uma conta e confirmar o e-mail
+- [ ] Enviar/restaurar backup pessoal criptografado no Firebase
 - [ ] Fechar e reabrir cofre pessoal
 - [ ] Compartilhar entrada/grupo/cofre com outra conta
 - [ ] Abrir compartilhamento como colaborador (com sharePassword)
@@ -86,7 +74,7 @@ npm run tauri build
 - [ ] Revogar compartilhamento
 - [ ] Trocar senha mestra — verificar que cofre reabre com nova senha
 - [ ] Auto-lock: aguardar 5 min sem interação — cofre deve bloquear
-- [ ] Testar em Android: OAuth, salvar, abrir e compartilhar via Firebase
+- [ ] Testar em Android: login Firebase, salvar local, backup e compartilhamento
 
 ---
 
@@ -97,5 +85,5 @@ Uma tag só deve ser marcada como v1.0 quando:
 1. Todos os gates automatizados passam em CI
 2. Build instalado e testado em pelo menos uma máquina real por plataforma alvo
 3. Artefatos assinados com chaves permanentes (Android obrigatório; macOS/Windows conforme distribuição)
-4. OAuth de produção verificado pelo Google ou uso limitado a teste fechado (≤100 usuários)
+4. Firebase Authentication e MFA TOTP configurados e validados
 5. Política de privacidade, termos e suporte publicados
