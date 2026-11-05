@@ -29,7 +29,7 @@ export function AboutScreen({ onClose }: AboutScreenProps) {
         <div className="overflow-y-auto flex-1 p-6 space-y-5">
           {/* Description */}
           <p className="text-vault-textSecondary text-sm leading-relaxed">
-            Cofre de senhas seguro para guardar, organizar e compartilhar credenciais.
+            Cofre de senhas seguro para guardar credenciais localmente ou na nuvem.
             Suas senhas são sempre criptografadas no seu dispositivo — nenhum dado é enviado sem proteção.
           </p>
 
@@ -55,12 +55,12 @@ export function AboutScreen({ onClose }: AboutScreenProps) {
               <InfoRow
                 icon={<Cloud size={15} className="text-vault-primary" />}
                 label="Nuvem"
-                value="Backup e compartilhamento cifrados; requer conta confirmada"
+                value="Modo Nuvem: cofre cifrado e compartilhável; requer conta confirmada"
               />
               <InfoRow
                 icon={<Share2 size={15} className="text-vault-primary" />}
                 label="Compartilhamento"
-                value="Cofre cifrado; senha de compartilhamento separada"
+                value="Disponível no modo Nuvem; senha de compartilhamento separada"
               />
             </div>
           </div>

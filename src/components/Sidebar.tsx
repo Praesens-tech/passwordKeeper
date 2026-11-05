@@ -21,7 +21,7 @@ interface SidebarProps {
 
 export function Sidebar({ onAddEntry, onForceSync, isForceSyncing }: SidebarProps) {
   const {
-    vault, activeView, selectedGroupId, searchQuery, firebaseAccount,
+    vault, activeView, selectedGroupId, searchQuery, firebaseAccount, storageMode,
     isSyncing, isDirty, localVaultPath, sidebarOpen, sharedSources,
     syncError, clearSyncError,
     setActiveView, selectGroup, setSearchQuery, lockVault,
@@ -45,6 +45,10 @@ export function Sidebar({ onAddEntry, onForceSync, isForceSyncing }: SidebarProp
   const { isAndroid } = usePlatform();
   const role = currentUserRole();
   const isOwner = role === "owner";
+  const hasSyncConflict = !!syncError?.startsWith("CONFLICT:");
+  const syncErrorMessage = hasSyncConflict
+    ? "Outro dispositivo atualizou o backup. A sincronização foi pausada para proteger as alterações. Se houver um arquivo .keep, guarde uma cópia e compare as versões antes de continuar."
+    : syncError?.replace(/^Error:\s*/, "");
   const pendingDeletionCount = vault?.deletionRequests?.length ?? 0;
 
   function handleDropOnGroup(e: React.DragEvent, groupId: string | null) {
@@ -186,7 +190,7 @@ export function Sidebar({ onAddEntry, onForceSync, isForceSyncing }: SidebarProp
                 active={activeView === "group" && selectedGroupId === group.id}
                 onClick={() => selectGroup(group.id)}
                 onEdit={canEditGroup(group.id) ? () => { setEditingGroup(group); setShowGroupForm(true); } : undefined}
-                onShare={isOwner ? () => setShareGroup(group) : undefined}
+                onShare={storageMode === "cloud" && isOwner ? () => setShareGroup(group) : undefined}
                 onDelete={isOwner ? () => setConfirmDeleteGroup(group.id) : undefined}
                 onAddEntry={canEditGroup(group.id) ? () => onAddEntry(group.id) : undefined}
                 onDrop={(e) => handleDropOnGroup(e, group.id)}
@@ -257,7 +261,7 @@ export function Sidebar({ onAddEntry, onForceSync, isForceSyncing }: SidebarProp
         >
 
           {/* Save locally — desktop only */}
-          {!isAndroid && (
+          {!isAndroid && storageMode === "local" && (
             <button
               onClick={() => saveToLocalFile()}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition-colors hover:bg-vault-card"
@@ -276,21 +280,21 @@ export function Sidebar({ onAddEntry, onForceSync, isForceSyncing }: SidebarProp
 
           <button onClick={() => setShowCloudAccount(true)} className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition-colors hover:bg-vault-card">
             <Cloud size={16} className={firebaseAccount ? "text-vault-primary" : "text-vault-textMuted"} />
-            <span className="flex-1 text-left truncate text-xs text-vault-textMuted">{firebaseAccount?.email ?? "Conta e backup na nuvem"}</span>
+            <span className="flex-1 text-left truncate text-xs text-vault-textMuted">{storageMode === "cloud" ? `Nuvem · ${firebaseAccount?.email ?? "conectar conta"}` : "Local · compartilhamento desativado"}</span>
             {(isSyncing || isForceSyncing) && <span className="h-3 w-3 rounded-full border border-vault-primary border-t-transparent animate-spin" />}
           </button>
 
           {/* Force sync button — visible when connected and there are shared sources or dirty state */}
-          {firebaseAccount && (isDirty || sharedSources.length > 0) && (
+          {storageMode === "cloud" && firebaseAccount && (isDirty || sharedSources.length > 0) && (
             <button
               onClick={onForceSync}
-              disabled={isSyncing || isForceSyncing}
+              disabled={isSyncing || isForceSyncing || hasSyncConflict}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition-colors hover:bg-vault-card disabled:opacity-50 disabled:cursor-not-allowed"
               title="Forçar sincronização agora"
             >
               <RefreshCw size={16} className={`${isForceSyncing ? "animate-spin text-vault-primary" : "text-vault-textMuted"}`} />
               <span className={`flex-1 text-left text-xs ${isForceSyncing ? "text-vault-primary" : "text-vault-textMuted"}`}>
-                {isForceSyncing ? "Sincronizando..." : "Sincronizar agora"}
+                {isForceSyncing ? "Sincronizando..." : hasSyncConflict ? "Sincronização pausada" : "Sincronizar agora"}
               </span>
             </button>
           )}
@@ -299,7 +303,7 @@ export function Sidebar({ onAddEntry, onForceSync, isForceSyncing }: SidebarProp
           {syncError && (
             <div className="mx-1 flex items-start gap-2 px-3 py-2 rounded-xl bg-vault-danger/10 border border-vault-danger/20">
               <AlertCircle size={14} className="text-vault-danger flex-shrink-0 mt-0.5" />
-              <p className="flex-1 text-xs text-vault-danger leading-snug line-clamp-3">{syncError}</p>
+              <p className="flex-1 text-xs text-vault-danger leading-snug line-clamp-3">{syncErrorMessage}</p>
               <button onClick={clearSyncError} className="text-vault-danger hover:opacity-70 flex-shrink-0">
                 <X size={13} />
               </button>
@@ -321,7 +325,7 @@ export function Sidebar({ onAddEntry, onForceSync, isForceSyncing }: SidebarProp
           )}
 
           {/* Manage shared users — owner only */}
-          {isOwner && (
+          {storageMode === "cloud" && isOwner && (
             <button
               onClick={() => setShowSharedUsers(true)}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-vault-textMuted hover:text-vault-text hover:bg-vault-card transition-colors"
@@ -337,13 +341,13 @@ export function Sidebar({ onAddEntry, onForceSync, isForceSyncing }: SidebarProp
           )}
 
           {/* Open shared collaboration */}
-          <button
+          {storageMode === "cloud" && <button
             onClick={() => setShowImport(true)}
             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-vault-textMuted hover:text-vault-text hover:bg-vault-card transition-colors"
           >
             <Share2 size={16} />
             Abrir compartilhamento
-          </button>
+          </button>}
 
           {/* About */}
           <button

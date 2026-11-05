@@ -17,7 +17,7 @@ interface AppMenuBarProps {
 }
 
 export function AppMenuBar({ onForceSync, isForceSyncing }: AppMenuBarProps) {
-  const { saveToLocalFile, localVaultPath, closeVault, currentUserRole, toggleSidebar, sidebarOpen, vault, setVaultName, firebaseAccount, syncToFirebase } = useVaultStore();
+  const { saveToLocalFile, localVaultPath, storageMode, closeVault, currentUserRole, toggleSidebar, sidebarOpen, vault, setVaultName, firebaseAccount, syncToFirebase } = useVaultStore();
   const { isAndroid } = usePlatform();
   const [openMenu, setOpenMenu] = useState<"file" | "utils" | "help" | null>(null);
   const [showAbout, setShowAbout] = useState(false);
@@ -120,13 +120,13 @@ export function AppMenuBar({ onForceSync, isForceSyncing }: AppMenuBarProps) {
             <MenuItem icon={<FolderOpen size={14} />} label="Abrir arquivo local..." onClick={() => { close(); closeVault(); }} />
             {!vault?.collaboration && isOwner && <MenuItem icon={<Pencil size={14} />} label="Nome do cofre..." onClick={() => { close(); setVaultNameDraft(vault?.name ?? "Meu cofre"); setShowVaultName(true); }} />}
             <Separator />
-            <MenuItem
+            {storageMode === "local" && <MenuItem
               icon={<Save size={14} />}
               label={localVaultPath ? "Salvar" : "Salvar como..."}
               onClick={() => { close(); saveToLocalFile(localVaultPath ?? undefined); }}
-            />
+            />}
             <MenuItem icon={<Cloud size={14} />} label="Conta e nuvem..." onClick={() => { close(); setShowCloudAccount(true); }} />
-            {isOwner && (
+            {storageMode === "cloud" && isOwner && (
               <>
                 <Separator />
                 <MenuItem icon={<Share2 size={14} />} label="Compartilhar com..." onClick={() => { close(); setShowShared(true); }} />

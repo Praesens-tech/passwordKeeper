@@ -62,6 +62,8 @@ function toSharedEntryId(sourceId: string, localEntryId: string): string {
 }
 
 interface VaultStore {
+  storageMode: "local" | "cloud";
+  setStorageMode: (mode: "local" | "cloud") => void;
   // ── Auth / Lock state ──────────────────────────────────────────────────────
   isLocked: boolean;
   masterPassword: string;
@@ -186,6 +188,11 @@ interface VaultStore {
 }
 
 export const useVaultStore = create<VaultStore>((set, get) => ({
+  storageMode: loadPersisted<"local" | "cloud">("pk_storage_mode") ?? "local",
+  setStorageMode: (mode) => {
+    savePersisted("pk_storage_mode", mode);
+    set({ storageMode: mode });
+  },
   isLocked: true,
   masterPassword: "",
   vaultDataKey: null,
@@ -251,6 +258,7 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     if (!remote) throw new Error("Esta conta ainda não tem backup na nuvem.");
     await get().unlockVault(remote.ciphertext, password);
     savePersisted("pk_local_vault_path", null);
+    get().setStorageMode("cloud");
     set({ localVaultPath: null, firebaseBackupRevision: isLegacyBackup ? null : remote.revision, lastSyncAt: now(), isDirty: false });
     if (isLegacyBackup) await get().syncToFirebase();
   },
@@ -260,7 +268,7 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     const { isDirty, masterPassword } = get();
     if (!masterPassword) return;
     if (isDirty) {
-      set({ syncError: "O backup na nuvem mudou em outro dispositivo. Sincronize antes de salvar para evitar sobrescrever alterações." });
+      set({ syncError: "CONFLICT: o backup na nuvem foi atualizado em outro dispositivo. A sincronização foi pausada para proteger as duas versões." });
       return;
     }
     const opened = await decryptVaultEnvelope(snapshot.ciphertext, masterPassword);
@@ -378,6 +386,7 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
       groups: [],
       entries: [],
     };
+    get().setStorageMode("local");
     set({ vault, masterPassword, vaultDataKey: null, vaultKeySlots: [], isLocked: false, isDirty: true });
   },
 
@@ -409,6 +418,7 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
       isLocked: false,
       sharedSources: [],
     });
+    get().setStorageMode("local");
   },
 
   lockVault: () => {
@@ -892,32 +902,36 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
   clearSyncError: () => set({ syncError: null }),
 
   forceSync: async () => {
-    const { firebaseAccount, localVaultPath, isDirty, vault } = get();
+    const { firebaseAccount, localVaultPath, isDirty, vault, storageMode } = get();
     const isAndroid = /android/i.test(navigator.userAgent);
     // Avoid replacing the owner's personal backup with a collaborator envelope.
     const isOwnerOfCollabVault = !!vault?.collaboration && get().currentUserRole() === "owner";
+    if (get().syncError?.startsWith("CONFLICT:")) return;
     set({ syncError: null });
     try {
       if (isDirty && !isOwnerOfCollabVault) {
-        if (localVaultPath || isAndroid) await get().saveToLocalFile(localVaultPath ?? undefined);
-        if (firebaseAccount) await get().syncToFirebase();
+        if (storageMode === "local" && (localVaultPath || isAndroid)) await get().saveToLocalFile(localVaultPath ?? undefined);
+        if (storageMode === "cloud" && firebaseAccount) await get().syncToFirebase();
       }
-      // Propagate owner's vault changes to all owned shared sources
-      get().syncOwnedSharedSourcesFromVault();
-      // Retry any writable received shared sources (editor role)
-      const writables = get().sharedSources.filter((s) => s.role !== "reader");
-      for (const source of writables) {
-        await get().syncSharedSource(source.id);
+      if (storageMode === "cloud") {
+        // Propagate owner's vault changes to all owned shared sources
+        get().syncOwnedSharedSourcesFromVault();
+        // Retry any writable received shared sources (editor role)
+        const writables = get().sharedSources.filter((s) => s.role !== "reader");
+        for (const source of writables) {
+          await get().syncSharedSource(source.id);
+        }
+        // Pull latest from all shared sources
+        await get().refreshSharedSources();
       }
-      // Pull latest from all shared sources
-      await get().refreshSharedSources();
     } catch (err) {
       set({ syncError: String(err) });
     }
   },
 
   syncToFirebase: async () => {
-    const { vault, masterPassword, firebaseAccount } = get();
+    const { vault, masterPassword, firebaseAccount, storageMode } = get();
+    if (storageMode !== "cloud") throw new Error("Este cofre está no modo Local. Ative Nuvem para sincronizar ou compartilhar.");
     if (!firebaseAccount || !vault || !masterPassword) return;
     if (vault.collaboration) throw new Error("Cofres colaborativos devem ser sincronizados pelo documento compartilhado.");
     set({ isSyncing: true, syncError: null });
@@ -1135,7 +1149,8 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
   },
 
   createSharedDocument: async ({ targetType, targetId, targetTitle, collaboratorEmail, collaboratorRole, sharePassword }) => {
-    const { vault, firebaseAccount, userInfo } = get();
+    const { vault, firebaseAccount, userInfo, storageMode } = get();
+    if (storageMode !== "cloud") throw new Error("O compartilhamento está disponível somente para cofres no modo Nuvem.");
     if (!vault) throw new Error("Cofre não está desbloqueado");
     if (!sharePassword) throw new Error("Senha de compartilhamento é obrigatória");
 

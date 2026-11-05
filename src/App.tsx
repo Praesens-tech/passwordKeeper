@@ -14,7 +14,7 @@ export function App() {
   const { isAndroid } = usePlatform();
   const {
     isLocked, isDirty, isSyncing, syncError, vault, masterPassword, userInfo,
-    localVaultPath,
+    localVaultPath, storageMode,
     sharedSources,
     firebaseAuthenticated, firebaseAccount,
     saveToLocalFile, initFromStorage,
@@ -52,7 +52,7 @@ export function App() {
       firebaseRestoreStartedRef.current = null;
       return;
     }
-    if (!firebaseAccount) {
+    if (storageMode !== "cloud" || !firebaseAccount) {
       firebaseRestoreStartedRef.current = null;
       return;
     }
@@ -63,19 +63,19 @@ export function App() {
       if (firebaseRestoreStartedRef.current === account) firebaseRestoreStartedRef.current = null;
       useVaultStore.setState({ syncError: String(error) });
     });
-  }, [isLocked, firebaseAccount, masterPassword, vault, restoreOwnedFirebaseShares]);
+  }, [isLocked, storageMode, firebaseAccount, masterPassword, vault, restoreOwnedFirebaseShares]);
 
   useEffect(() => {
-    if (isLocked || !firebaseAccount) return;
+    if (isLocked || storageMode !== "cloud" || !firebaseAccount) return;
     return watchPersonalFirebaseVault(firebaseAccount.uid, (snapshot) => {
       useVaultStore.getState().applyFirebaseBackupSnapshot(snapshot).catch((error) => {
         useVaultStore.setState({ syncError: String(error) });
       });
     }, (error) => useVaultStore.setState({ syncError: String(error) }));
-  }, [isLocked, firebaseAccount]);
+  }, [isLocked, storageMode, firebaseAccount]);
 
   useEffect(() => {
-    if (isLocked || !firebaseAuthenticated) return;
+    if (isLocked || storageMode !== "cloud" || !firebaseAuthenticated) return;
     const stops = sharedSources
       .filter((source) => source.backend === "firebase")
       .map((source) => watchFirebaseVault(
@@ -92,28 +92,29 @@ export function App() {
         },
       ));
     return () => stops.forEach((stop) => stop());
-  }, [isLocked, firebaseAuthenticated, sharedSources]);
+  }, [isLocked, storageMode, firebaseAuthenticated, sharedSources]);
 
   // ── Auto-save ──────────────────────────────────────────────────────────────
-  // Salva localmente e sincroniza uma cópia cifrada na nuvem quando há uma conta conectada.
+  // Mantém apenas o destino escolhido: arquivo local ou cofre cifrado na nuvem.
   useEffect(() => {
     if (!isDirty) return;
     if (autoSyncTimerRef.current) clearTimeout(autoSyncTimerRef.current);
     autoSyncTimerRef.current = setTimeout(() => {
       const state = useVaultStore.getState();
+      if (state.syncError?.startsWith("CONFLICT:")) return;
       const isOwnerOfCollabVault =
         !!state.vault?.collaboration && state.currentUserRole() === "owner";
-      if (localVaultPath || isAndroid) {
+      if (storageMode === "local" && (localVaultPath || isAndroid)) {
         saveToLocalFile(localVaultPath ?? undefined).catch(() => {});
       }
-      if (firebaseAccount && !isOwnerOfCollabVault) {
+      if (storageMode === "cloud" && firebaseAccount && !isOwnerOfCollabVault) {
         state.syncToFirebase().catch(() => {});
       }
     }, 5000);
     return () => {
       if (autoSyncTimerRef.current) clearTimeout(autoSyncTimerRef.current);
     };
-  }, [isDirty, firebaseAccount, localVaultPath, isAndroid]);
+  }, [isDirty, firebaseAccount, localVaultPath, isAndroid, storageMode]);
 
   // ── Auto-lock por inatividade (5 min) ────────────────────────────────────
   useEffect(() => {
@@ -151,6 +152,10 @@ export function App() {
   }
 
   const isCollabVault = !!vault?.collaboration;
+  const hasSyncConflict = !!syncError?.startsWith("CONFLICT:");
+  const syncErrorMessage = hasSyncConflict
+    ? "Outro dispositivo atualizou o backup. A sincronização foi pausada para proteger as alterações. Se houver um arquivo .keep, guarde uma cópia e compare as versões antes de continuar."
+    : syncError?.replace(/^Error:\s*/, "");
 
   return (
     <div className="h-screen flex flex-col bg-vault-bg overflow-hidden">
@@ -161,7 +166,7 @@ export function App() {
       {syncError && (
         <div className="flex items-center gap-2 px-4 py-2 text-xs bg-vault-danger/10 text-vault-danger border-b border-vault-danger/20">
           <AlertCircle size={13} className="flex-shrink-0" />
-          <span className="flex-1 truncate">Erro de sincronização: {syncError}</span>
+          <span className="flex-1 truncate">{syncErrorMessage}</span>
           <button
             onClick={clearSyncError}
             className="p-0.5 rounded hover:bg-vault-danger/20 transition-colors flex-shrink-0"
@@ -175,7 +180,7 @@ export function App() {
       {(isDirty || isSyncing || isForceSyncing) && (
         <button
           onClick={handleForceSync}
-          disabled={isSyncing || isForceSyncing}
+          disabled={isSyncing || isForceSyncing || hasSyncConflict}
           className={`w-full flex items-center justify-center gap-2 py-1.5 text-xs transition-all ${
             isSyncing || isForceSyncing
               ? "bg-blue-500/10 text-blue-400 cursor-default"
@@ -188,7 +193,7 @@ export function App() {
           {isSyncing || isForceSyncing ? (
             <><RefreshCw size={12} className="animate-spin" /> Sincronizando...</>
           ) : (
-            <><Cloud size={12} /> Alterações pendentes — clique para sincronizar</>
+            hasSyncConflict ? <><AlertCircle size={12} /> Sincronização pausada — revise as versões</> : <><Cloud size={12} /> Alterações pendentes — clique para sincronizar</>
           )}
         </button>
       )}

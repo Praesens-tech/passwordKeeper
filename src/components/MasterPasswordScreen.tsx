@@ -1,19 +1,20 @@
 import { useState } from "react";
-import { Plus, FolderOpen, Cloud, FileKey, ArrowRight, Loader2 } from "lucide-react";
+import { Plus, FolderOpen, Cloud, FileKey, ArrowRight, Loader2, KeyRound } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { usePlatform } from "../hooks/usePlatform";
 import { useVaultStore } from "../store/vaultStore";
 import { getMobileVaultPath, pickOpenPath, pickSavePath, readVaultFile } from "../services/localFile";
 
-type ScreenMode = "choose" | "quick" | "new" | "local" | "cloud";
+type ScreenMode = "choose" | "quick" | "new" | "local" | "cloud" | "cloudNew";
 
 export function MasterPasswordScreen() {
   const { isAndroid } = usePlatform();
   const store = useVaultStore();
-  const [mode, setMode] = useState<ScreenMode>(store.localVaultPath ? "quick" : "choose");
+  const [mode, setMode] = useState<ScreenMode>(store.storageMode === "cloud" ? "choose" : store.localVaultPath ? "quick" : "choose");
   const [masterPwd, setMasterPwd] = useState("");
   const [confirmPwd, setConfirmPwd] = useState("");
   const [vaultName, setVaultName] = useState("Meu cofre");
+  const [cloudVaultName, setCloudVaultName] = useState("Meu cofre");
   const [accountEmail, setAccountEmail] = useState(store.firebaseAccount?.email ?? "");
   const [accountPassword, setAccountPassword] = useState("");
   const [createAccount, setCreateAccount] = useState(false);
@@ -67,7 +68,47 @@ export function MasterPasswordScreen() {
         if (!useVaultStore.getState().firebaseAccount) await store.signInAccount(accountEmail, accountPassword);
         await store.restoreFirebaseBackup(masterPwd);
       }
-    } catch (e) { setError(String(e).replace(/^Error:\s*/, "")); }
+    } catch (e) {
+      const code = (e as { code?: string }).code;
+      if (code === "auth/email-already-in-use") {
+        setCreateAccount(false); setAccountPassword("");
+        setError("Esta conta já existe. Entre com ela ou use “Esqueci a senha da conta” para redefinir a senha.");
+      } else if (String(e).includes("OperationError")) {
+        setError("Não foi possível descriptografar o backup. Confira a senha mestra usada nesse cofre; ela é diferente da senha da conta. A senha mestra não pode ser recuperada pelo Password Keeper.");
+      } else setError(String(e).replace(/^Error:\s*/, ""));
+    }
+    finally { setBusy(false); }
+  }
+  async function resetAccountPassword() {
+    setError(""); setNotice(""); setBusy(true);
+    try {
+      if (!accountEmail.trim()) throw new Error("Informe o e-mail da conta para receber o link de redefinição.");
+      await store.resetAccountPassword(accountEmail);
+      setNotice("Enviamos um link para redefinir a senha da conta. Isso não altera a senha mestra do cofre.");
+    } catch { setError("Não foi possível enviar o link. Confira o e-mail e tente novamente."); }
+    finally { setBusy(false); }
+  }
+  async function createCloudVault(e: React.FormEvent) {
+    e.preventDefault(); setBusy(true); setError(""); setNotice("");
+    let vaultCreated = false;
+    try {
+      if (!useVaultStore.getState().firebaseAccount) await store.signInAccount(accountEmail, accountPassword);
+      if (masterPwd.length < 12) throw new Error("Use uma senha mestra com pelo menos 12 caracteres.");
+      if (!cloudVaultName.trim()) throw new Error("Digite um nome para o cofre.");
+      store.createVault(masterPwd, cloudVaultName.trim());
+      vaultCreated = true;
+      store.setStorageMode("cloud");
+      await store.syncToFirebase();
+    } catch (e) {
+      const message = String(e).replace(/^Error:\s*/, "");
+      if (vaultCreated) {
+        store.setStorageMode("local");
+        const explanation = message.includes("CONFLICT")
+          ? "Já existe um backup nessa conta. Restaure esse cofre ou entre na conta correta; o backup não foi substituído."
+          : "Não foi possível enviar o cofre. Confira a conexão e o acesso da conta; nenhum backup existente foi alterado.";
+        useVaultStore.setState({ syncError: `${explanation} O cofre criado continua aberto; salve uma cópia local antes de fechar.` });
+      } else setError(message);
+    }
     finally { setBusy(false); }
   }
 
@@ -84,13 +125,13 @@ export function MasterPasswordScreen() {
 
   return <main className={"min-h-screen bg-vault-bg flex flex-col " + (isAndroid ? "px-4 pt-10 pb-6" : "items-center justify-center p-4")}>
     <div className={"w-full " + (isAndroid ? "flex flex-1 flex-col" : "max-w-md")}>
-      <header className="mb-6 text-center"><div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-lg border border-vault-border bg-white p-3"><img src="/assets/praesens_simbolo.svg" alt="Praesens" className="h-full w-full object-contain" /></div><h1 className="text-2xl font-bold text-vault-text">Password Keeper</h1><p className="mt-1 text-sm text-vault-textMuted">Cofre local com backup criptografado opcional na nuvem</p></header>
+      <header className="mb-6 text-center"><div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-lg border border-vault-border bg-white p-3"><img src="/assets/praesens_simbolo.svg" alt="Praesens" className="h-full w-full object-contain" /></div><h1 className="text-2xl font-bold text-vault-text">Password Keeper</h1><p className="mt-1 text-sm text-vault-textMuted">Escolha entre guardar o cofre localmente ou na nuvem com compartilhamento.</p></header>
       <section className="rounded-2xl border border-vault-border bg-vault-card p-5 shadow-2xl">
         {mode === "choose" && <div className="space-y-3"><h2 className="mb-4 text-center text-lg font-semibold text-vault-text">Como deseja começar?</h2>
           {store.localVaultPath && option(<FileKey />, "Abrir cofre local", store.localVaultPath.split(/[\\/]/).pop() ?? "", () => setMode("quick"))}
           {option(<Plus />, "Criar novo cofre", "Criar e salvar um cofre neste dispositivo", () => setMode("new"))}
           {option(<FolderOpen />, "Abrir arquivo local", "Selecionar um arquivo .keep", () => void openLocal())}
-          {option(<Cloud />, "Restaurar backup da nuvem", "Entrar na conta e abrir uma cópia criptografada", () => setMode("cloud"))}
+          {option(<Cloud />, "Usar cofre na nuvem", "Restaurar um backup ou criar um cofre compartilhável", () => setMode("cloud"))}
         </div>}
 
         {(mode === "quick" || mode === "local") && <form onSubmit={unlock} className="space-y-4">
@@ -115,12 +156,27 @@ export function MasterPasswordScreen() {
             <label className="block text-xs text-vault-textMuted">Senha da conta<input type="password" autoComplete={createAccount ? "new-password" : "current-password"} className={inputClass} value={accountPassword} onChange={(e) => setAccountPassword(e.target.value)} /></label>
           </>}
           {!createAccount && <label className="block text-xs text-vault-textMuted">Senha mestra do cofre<input type="password" autoComplete="current-password" className={inputClass} value={masterPwd} onChange={(e) => setMasterPwd(e.target.value)} /></label>}
+          {!createAccount && !useVaultStore.getState().firebaseAccount && <button type="button" onClick={() => void resetAccountPassword()} disabled={busy || !accountEmail.trim()} className="w-full text-left text-xs text-vault-primary hover:underline"><KeyRound size={12} className="mr-1 inline" />Esqueci a senha da conta</button>}
           {createAccount && <p className="text-xs text-vault-textMuted">Mínimo de 12 caracteres. Enviaremos um link para confirmar seu e-mail.</p>}
           {error && <ErrorMessage>{error}</ErrorMessage>}{notice && <p role="status" className="rounded-lg bg-vault-success/10 p-2.5 text-xs text-vault-success">{notice}</p>}
           <button disabled={busy || (!useVaultStore.getState().firebaseAccount && (!accountEmail || !accountPassword)) || (!createAccount && !masterPwd)} className={buttonClass}>{busy ? <Loader2 size={17} className="animate-spin" /> : <Cloud size={17} />}{createAccount ? "Criar conta" : "Entrar e restaurar"}</button>
           {!useVaultStore.getState().firebaseAccount && <button type="button" onClick={() => { setCreateAccount(!createAccount); setError(""); setNotice(""); }} className="w-full text-xs text-vault-textMuted">{createAccount ? "Já tenho uma conta" : "Criar conta nova"}</button>}
           <button type="button" onClick={() => void openAccountDeletion()} className="w-full text-xs text-vault-textMuted hover:text-vault-danger">Solicitar exclusão da conta e dos dados</button>
+          {!createAccount && <button type="button" onClick={() => { setMode("cloudNew"); setError(""); setNotice(""); }} className="w-full text-xs text-vault-primary hover:underline">Criar um cofre novo na nuvem</button>}
           <p className="text-center text-[11px] leading-relaxed text-vault-textMuted">A conta autoriza o acesso. A senha mestra descriptografa o cofre e nunca sai do dispositivo.</p>
+        </form>}
+
+        {mode === "cloudNew" && <form onSubmit={createCloudVault} className="space-y-3">
+          <Back onClick={() => setMode("cloud")} /><h2 className="text-center font-semibold text-vault-text">Criar cofre na nuvem</h2>
+          {!useVaultStore.getState().firebaseAccount && <>
+            <label className="block text-xs text-vault-textMuted">E-mail da conta confirmada<input type="email" autoComplete="email" className={inputClass} value={accountEmail} onChange={(e) => setAccountEmail(e.target.value)} /></label>
+            <label className="block text-xs text-vault-textMuted">Senha da conta<input type="password" autoComplete="current-password" className={inputClass} value={accountPassword} onChange={(e) => setAccountPassword(e.target.value)} /></label>
+          </>}
+          <label className="block text-xs text-vault-textMuted">Nome do cofre<input className={inputClass} value={cloudVaultName} onChange={(e) => setCloudVaultName(e.target.value)} /></label>
+          <label className="block text-xs text-vault-textMuted">Senha mestra do cofre<input type="password" autoComplete="new-password" className={inputClass} value={masterPwd} onChange={(e) => setMasterPwd(e.target.value)} /></label>
+          <p className="text-xs text-vault-textMuted">O cofre será criptografado antes do envio e não será salvo em arquivo local.</p>
+          {error && <ErrorMessage>{error}</ErrorMessage>}
+          <button disabled={busy || (!useVaultStore.getState().firebaseAccount && (!accountEmail || !accountPassword)) || masterPwd.length < 12} className={buttonClass}>{busy ? <Loader2 size={17} className="animate-spin" /> : <Cloud size={17} />}Criar cofre na nuvem</button>
         </form>}
       </section>
     </div>

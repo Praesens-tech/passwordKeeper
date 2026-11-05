@@ -121,6 +121,10 @@ export async function signInFirebaseAccount(email: string, password: string): Pr
     await signOut(getFirebaseAuth());
     throw new Error("Confirme seu e-mail pelo link enviado para entrar e acessar a nuvem.");
   }
+  // Firestore rules check the email_verified claim in the ID token. Reloading
+  // the Auth user updates the profile, but can leave the cached token claims
+  // stale after verification in another app or browser.
+  await credential.user.getIdToken(true);
   return accountFromUser(credential.user);
 }
 
@@ -129,6 +133,7 @@ export async function getFirebaseAccount(): Promise<FirebaseAccount | null> {
   if (!user) return null;
   await user.reload();
   if (!user.emailVerified) return null;
+  await user.getIdToken(true);
   return accountFromUser(user);
 }
 
@@ -175,7 +180,7 @@ export async function savePersonalFirebaseVault(uid: string, email: string, ciph
     const current = await transaction.get(ref);
     const revision = current.exists() ? Number(current.data().revision ?? 0) : 0;
     if (current.exists() && (expectedRevision === undefined || revision !== expectedRevision)) {
-      throw new Error("CONFLICT: o backup mudou em outro dispositivo. Sincronize antes de salvar.");
+      throw new Error("CONFLICT: o backup na nuvem foi atualizado em outro dispositivo. A sincronização foi pausada para proteger as duas versões.");
     }
     transaction.set(ref, { ciphertext, email: email.trim().toLowerCase(), revision: revision + 1, updatedAt: serverTimestamp() });
     return revision + 1;
