@@ -22,28 +22,6 @@ service cloud.firestore {
         && request.auth.token.email_verified == true;
     }
 
-    // Public download form: visitors may submit one consented record, but may
-    // never read, change, or delete registrations from the client.
-    match /downloadRegistrations/{registrationId} {
-      allow create: if request.resource.data.keys().hasAll([
-          'name', 'email', 'platform', 'consent', 'createdAt'
-        ])
-        && request.resource.data.keys().hasOnly([
-          'name', 'email', 'platform', 'consent', 'createdAt'
-        ])
-        && request.resource.data.name is string
-        && request.resource.data.name.size() >= 1
-        && request.resource.data.name.size() <= 100
-        && request.resource.data.email is string
-        && request.resource.data.email.size() >= 3
-        && request.resource.data.email.size() <= 254
-        && request.resource.data.email.matches('^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$')
-        && request.resource.data.platform in ['windows', 'macos', 'linux', 'android']
-        && request.resource.data.consent == true
-        && request.resource.data.createdAt == request.time;
-      allow read, update, delete: if false;
-    }
-
     match /sharedVaults/{vaultId} {
       function signedIn() {
         return request.auth != null;

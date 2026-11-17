@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "password-keeper-mpb-2026"
+    "default": "password-keeper-mpb-2026",
+    "downloads": "password-keeper-downloads-2026"
   }
 }

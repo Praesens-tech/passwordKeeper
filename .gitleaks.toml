@@ -7,5 +7,8 @@ useDefault = true
 description = "Allow the public Firebase web API key only in the download page client config"
 condition = "AND"
 regexTarget = "secret"
-regexes = [ '''^AIzaSyBQ[k]7fKlYfjP3DRGGl943TBlMxO1CthXUk$''' ]
+regexes = [
+  '''^AIzaSyBQ[k]7fKlYfjP3DRGGl943TBlMxO1CthXUk$''',
+  '''^AIzaSy[D]8n2N0YAN6RgV2SDBa2vIT7digvZijij0$'''
+]
 paths = [ '''docs/download\.html$''' ]
