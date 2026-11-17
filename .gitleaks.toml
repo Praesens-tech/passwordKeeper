@@ -1,0 +1,11 @@
+title = "Password Keeper Gitleaks config"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Allow the public Firebase web API key only in the download page client config"
+condition = "AND"
+regexTarget = "secret"
+regexes = [ '''^AIzaSyBQ[k]7fKlYfjP3DRGGl943TBlMxO1CthXUk$''' ]
+paths = [ '''docs/download\.html$''' ]
